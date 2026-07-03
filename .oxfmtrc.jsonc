@@ -1,0 +1,24 @@
+{
+  "sortImports": {
+    "groups": [
+      "value-builtin",
+      "value-external", // External dependencies
+      "value-internal", // Your internal modules
+      ["value-sibling", "value-parent"], // Sibling and parent imports
+      ["type"], // TypeScript type imports
+    ],
+    "internalPattern": ["@/", "@repo/"],
+    "ignoreCase": true,
+    "newlinesBetween": true, // Set to true to add a newline between groups
+    "order": "asc", // Sort alphabetically within groups
+  },
+  "sortTailwindcss": {
+    "stylesheet": "./packages/ui/src/styles/globals.css",
+    "attributes": ["class", "className"],
+    "functions": ["clsx", "cn"],
+    "preserveWhitespace": true,
+  },
+  "sortPackageJson": {
+    "sortScripts": true,
+  },
+}
