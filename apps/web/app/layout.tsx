@@ -1,5 +1,6 @@
-import localFont from "next/font/local";
+import { Hanken_Grotesk } from "next/font/google";
 
+import { APP_DESCRIPTION, APP_NAME } from "@/core/constants";
 import { ConvexClientProvider } from "@/core/providers/convex-provider";
 import UiProviders from "@repo/ui/ui-providers";
 
@@ -7,31 +8,36 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
+const hankenGrotesk = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-hanken",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vercel.com"),
-  title: "Next-Tailwind Starter Template",
-  description: "Starter Template",
-  keywords: ["nextjs", "tailwindcss", "template", "starter", "kit"],
+  title: {
+    default: `${APP_NAME} | The Operating System for Real-World Asset Tokenization`,
+    template: `%s | ${APP_NAME}`,
+  },
+  description: APP_DESCRIPTION,
+  keywords: ["tokenized assets", "stellar network", "blockchain", "enterprise infrastructure"],
+  icons: {
+    icon: "/sora-logo.png",
+    shortcut: "/sora-logo.png",
+    apple: "/sora-logo.png",
+  },
   openGraph: {
-    siteName: "Next-Tailwind Starter Template",
-    title: "Next-Tailwind Starter Template",
-    description: "Starter Template",
-    images: "/banner.png",
+    siteName: APP_NAME,
+    title: `${APP_NAME} | Real-World Asset Tokenization Infrastructure`,
+    description: APP_DESCRIPTION,
+    images: "/sora-og-image.png",
     type: "website",
   },
   twitter: {
-    title: "Next-Tailwind Starter Template",
-    description: "Starter Template",
-    images: "/banner.png",
+    title: `${APP_NAME} | Real-World Asset Tokenization Infrastructure`,
+    description: APP_DESCRIPTION,
+    images: "/sora-og-image.png",
     card: "summary_large_image",
   },
 };
@@ -43,7 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={hankenGrotesk.variable}>
         <ConvexClientProvider>
           <UiProviders>{children}</UiProviders>
         </ConvexClientProvider>

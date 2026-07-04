@@ -77,7 +77,7 @@
 
 @theme inline {
   /* fonts */
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-hanken);
 
   /* shadcn-ui */
   --color-background: var(--background);

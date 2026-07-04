@@ -22,7 +22,9 @@ export default function Template() {
 
         <div className="mt-4 rounded-full bg-gray-300 px-3 py-1 text-xs">Available Fonts</div>
         <div className="flex gap-4">
-          <h1 className="text-center font-sans text-4xl font-bold text-green-500">Geist Font</h1>
+          <h1 className="text-center font-sans text-4xl font-bold text-green-500">
+            Hanken Grotesk Font
+          </h1>
         </div>
 
         <div className="mt-4 rounded-full bg-gray-300 px-3 py-1 text-xs">Toast Example</div>
