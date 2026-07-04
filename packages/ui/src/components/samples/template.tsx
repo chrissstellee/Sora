@@ -21,10 +21,25 @@ export default function Template() {
         </h1>
 
         <div className="mt-4 rounded-full bg-gray-300 px-3 py-1 text-xs">Available Fonts</div>
-        <div className="flex gap-4">
-          <h1 className="text-center font-sans text-4xl font-bold text-green-500">
-            Hanken Grotesk Font
-          </h1>
+        <div className="flex flex-col gap-4 rounded-lg border p-6">
+          <div>
+            <p className="mb-1 text-xs text-muted-foreground">font-display</p>
+            <h1 className="font-display text-4xl font-bold">
+              Hanken Grotesk
+            </h1>
+          </div>
+          <div>
+            <p className="mb-1 text-xs text-muted-foreground">font-sans (default)</p>
+            <p className="font-sans text-lg">
+              Inter — The quick brown fox jumps over the lazy dog.
+            </p>
+          </div>
+          <div>
+            <p className="mb-1 text-xs text-muted-foreground">font-mono</p>
+            <code className="font-mono text-base">
+              const sora = &#123; network: "Stellar", status: "Ready" &#125;
+            </code>
+          </div>
         </div>
 
         <div className="mt-4 rounded-full bg-gray-300 px-3 py-1 text-xs">Toast Example</div>

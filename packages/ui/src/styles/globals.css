@@ -77,7 +77,9 @@
 
 @theme inline {
   /* fonts */
-  --font-sans: var(--font-hanken);
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 
   /* shadcn-ui */
   --color-background: var(--background);
@@ -118,12 +120,16 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@utility font-display {
+  font-family: var(--font-display);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
 

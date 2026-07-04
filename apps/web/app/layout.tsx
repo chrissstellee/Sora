@@ -1,4 +1,4 @@
-import { Hanken_Grotesk } from "next/font/google";
+import { Hanken_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 
 import { APP_DESCRIPTION, APP_NAME } from "@/core/constants";
 import { ConvexClientProvider } from "@/core/providers/convex-provider";
@@ -10,7 +10,19 @@ import "./globals.css";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
-  variable: "--font-hanken",
+  variable: "--font-display",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -49,7 +61,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={hankenGrotesk.variable}>
+      <body className={[hankenGrotesk.variable, inter.variable, jetbrainsMono.variable].join(" ")}>
         <ConvexClientProvider>
           <UiProviders>{children}</UiProviders>
         </ConvexClientProvider>
