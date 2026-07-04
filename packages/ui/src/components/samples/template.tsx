@@ -24,9 +24,7 @@ export default function Template() {
         <div className="flex flex-col gap-4 rounded-lg border p-6">
           <div>
             <p className="mb-1 text-xs text-muted-foreground">font-display</p>
-            <h1 className="font-display text-4xl font-bold">
-              Hanken Grotesk
-            </h1>
+            <h1 className="font-display text-4xl font-bold">Hanken Grotesk</h1>
           </div>
           <div>
             <p className="mb-1 text-xs text-muted-foreground">font-sans (default)</p>
