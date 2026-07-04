@@ -13,10 +13,14 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        gradient:
+          "bg-linear-135 from-primary via-[#BC8480] to-secondary text-foreground hover:opacity-90",
+        outlineSecondary:
+          "border border-secondary bg-transparent text-secondary hover:bg-secondary/10",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -36,26 +40,38 @@ const buttonVariants = cva(
   },
 );
 
+import Loading from "../common/loading";
+
+export interface ButtonProps
+  extends React.ComponentProps<"button">, VariantProps<typeof buttonVariants> {
+  asChild?: boolean;
+  loading?: boolean;
+}
+
 function Button({
   className,
   variant = "default",
   size = "default",
   asChild = false,
+  loading = false,
+  disabled,
+  children,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean;
-  }) {
-  const Comp = asChild ? Slot.Root : "button";
+}: ButtonProps) {
+  const Comp = asChild && !loading ? Slot.Root : "button";
 
   return (
     <Comp
       data-slot="button"
       data-variant={variant}
       data-size={size}
+      disabled={disabled || loading}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      {loading && <Loading className="mr-2" />}
+      {children}
+    </Comp>
   );
 }
 
