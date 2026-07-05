@@ -44,7 +44,9 @@ function NavLinks() {
 function NavActions() {
   return (
     <div className="flex items-center gap-3">
-      <Button variant="outline">Sign In</Button>
+      <Button variant="outline" asChild>
+        <Link href="/login">Sign In</Link>
+      </Button>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { APP_NAME } from "@/core/constants";
 
 import { FOOTER_SECTIONS, SOCIALS } from "../constants/landing";
@@ -10,9 +12,9 @@ function renderFooterLink(link: IFooterLink, className: string) {
   }
 
   return (
-    <a href={link.href} className={className}>
+    <Link href={link.href} className={className}>
       {link.label}
-    </a>
+    </Link>
   );
 }
 
@@ -36,14 +38,14 @@ export function Footer() {
             </p>
             <div className="mt-6 flex items-center gap-4">
               {SOCIALS.map(({ icon: Icon, label, href }) => (
-                <a
+                <Link
                   key={label}
                   href={href}
                   aria-label={label}
                   className="text-muted-foreground transition-colors hover:text-foreground"
                 >
                   <Icon className="size-4" strokeWidth={1.75} />
-                </a>
+                </Link>
               ))}
             </div>
           </div>
@@ -69,21 +71,21 @@ export function Footer() {
 
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-8 sm:flex-row">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Sora Infrastructure. All Rights Reserved.
+            &copy; 2026 Sora Infrastructure. All Rights Reserved.
           </p>
           <div className="flex items-center gap-6">
-            <a
-              href="#"
+            <Link
+              href="/privacy"
               className="text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Privacy Policy
-            </a>
-            <a
-              href="#"
+            </Link>
+            <Link
+              href="/terms"
               className="text-xs text-muted-foreground transition-colors hover:text-foreground"
             >
               Terms of Service
-            </a>
+            </Link>
           </div>
         </div>
       </div>
