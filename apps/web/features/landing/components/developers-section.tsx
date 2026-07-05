@@ -1,5 +1,5 @@
+import { SpotlightCard } from "@repo/ui/components/ui-customs/spotlight-card";
 import { Button } from "@repo/ui/components/ui/button";
-import { Card } from "@repo/ui/components/ui/card";
 
 import { CODE_LINES, ENDPOINTS } from "../constants/landing";
 import { Reveal } from "./shared/reveal";
@@ -36,7 +36,7 @@ export function DevelopersSection() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <Card className="gap-0 overflow-hidden p-0 font-mono">
+          <SpotlightCard className="gap-0 overflow-hidden p-0 font-mono">
             <div className="flex items-center gap-1.5 border-b border-border px-4 py-3">
               <span className="size-2.5 rounded-full bg-destructive/70" />
               <span className="size-2.5 rounded-full bg-secondary/70" />
@@ -57,7 +57,7 @@ export function DevelopersSection() {
                 ))}
               </code>
             </pre>
-          </Card>
+          </SpotlightCard>
         </Reveal>
       </div>
     </section>

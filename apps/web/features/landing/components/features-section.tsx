@@ -1,6 +1,6 @@
 import { FileText } from "lucide-react";
 
-import { Card } from "@repo/ui/components/ui/card";
+import { SpotlightCard } from "@repo/ui/components/ui-customs/spotlight-card";
 
 import { SIDE_FEATURES, SMALL_FEATURES } from "../constants/landing";
 import { Reveal } from "./shared/reveal";
@@ -19,7 +19,7 @@ export function FeaturesSection() {
 
       <div className="mt-12 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <Reveal delay={0.05}>
-          <Card className="h-full justify-between gap-8 p-8">
+          <SpotlightCard className="h-full justify-between gap-8 p-8">
             <div>
               <div className="mb-5 flex size-10 items-center justify-center rounded-lg bg-primary/15">
                 <FileText className="size-5 text-primary" strokeWidth={1.75} />
@@ -53,13 +53,13 @@ export function FeaturesSection() {
                 </div>
               </div>
             </div>
-          </Card>
+          </SpotlightCard>
         </Reveal>
 
         <div className="grid gap-6">
           {SIDE_FEATURES.map(({ icon: Icon, title, description }, index) => (
             <Reveal key={title} delay={0.1 + index * 0.05}>
-              <Card className="h-full gap-4 p-6">
+              <SpotlightCard className="h-full gap-4 p-6">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-secondary/15">
                   <Icon className="size-5 text-secondary" strokeWidth={1.75} />
                 </div>
@@ -67,7 +67,7 @@ export function FeaturesSection() {
                   <h3 className="font-display text-lg font-semibold tracking-tight">{title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{description}</p>
                 </div>
-              </Card>
+              </SpotlightCard>
             </Reveal>
           ))}
         </div>
@@ -76,10 +76,10 @@ export function FeaturesSection() {
       <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {SMALL_FEATURES.map(({ title, description }, index) => (
           <Reveal key={title} delay={0.15 + index * 0.05}>
-            <Card className="h-full gap-2 p-6">
+            <SpotlightCard className="h-full gap-2 p-6">
               <p className="font-mono text-xs tracking-wide text-soft-primary">{title}</p>
               <p className="text-sm text-muted-foreground">{description}</p>
-            </Card>
+            </SpotlightCard>
           </Reveal>
         ))}
       </div>

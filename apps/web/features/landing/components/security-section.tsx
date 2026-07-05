@@ -1,4 +1,4 @@
-import { Card } from "@repo/ui/components/ui/card";
+import { SpotlightCard } from "@repo/ui/components/ui-customs/spotlight-card";
 
 import { SECURITY_ITEMS } from "../constants/landing";
 import { Reveal } from "./shared/reveal";
@@ -11,13 +11,13 @@ export function SecuritySection() {
           <div className="grid grid-cols-2 gap-4">
             {SECURITY_ITEMS.map(({ icon: Icon, title, description }, index) => (
               <Reveal key={title} delay={index * 0.05}>
-                <Card className="h-full gap-3 p-5">
+                <SpotlightCard className="h-full gap-3 p-5">
                   <Icon className="size-5 text-primary" strokeWidth={1.75} />
                   <div>
                     <h3 className="font-display text-sm font-semibold tracking-tight">{title}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">{description}</p>
                   </div>
-                </Card>
+                </SpotlightCard>
               </Reveal>
             ))}
           </div>
