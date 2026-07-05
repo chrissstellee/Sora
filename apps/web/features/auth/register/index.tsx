@@ -4,14 +4,12 @@ import { Separator } from "@repo/ui/components/ui/separator";
 
 import { AuthCard } from "../components/auth-card";
 import { PasskeyButton } from "../components/passkey-button";
+import { AUTH_CARD, AUTH_PROMPT } from "../constants/auth";
 import { RegisterForm } from "./components/register-form";
 
 export function CreateAccountPage() {
   return (
-    <AuthCard
-      title="Create Account"
-      description="Begin your journey in the RWA frontier with cosmic infrastructure."
-    >
+    <AuthCard title={AUTH_CARD.register.title} description={AUTH_CARD.register.description}>
       <RegisterForm />
 
       <div className="my-3 flex items-center gap-3">
@@ -25,9 +23,9 @@ export function CreateAccountPage() {
       <PasskeyButton mode="signup" />
 
       <p className="text-center text-sm text-muted-foreground">
-        Already have an account?{" "}
+        {AUTH_PROMPT.register.prompt}{" "}
         <Link href="/login" className="font-semibold text-soft-primary hover:underline">
-          Log In
+          {AUTH_PROMPT.register.action}
         </Link>
       </p>
     </AuthCard>

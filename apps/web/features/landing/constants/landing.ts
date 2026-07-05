@@ -144,13 +144,13 @@ export const FOOTER_SECTIONS: IFooterSection[] = [
   {
     title: "Product",
     links: PRODUCT_LINKS.map((item) =>
-      typeof item === "string" ? { label: item, href: "#" } : item
+      typeof item === "string" ? { label: item, href: "#" } : item,
     ),
   },
   {
     title: "Resources",
     links: RESOURCE_LINKS.map((item) =>
-      typeof item === "string" ? { label: item, href: "#" } : item
+      typeof item === "string" ? { label: item, href: "#" } : item,
     ),
   },
 ];
