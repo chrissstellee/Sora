@@ -28,9 +28,9 @@ export function Footer() {
               <img
                 src="/sora-logo.png"
                 alt="Sora Logo"
-                className="h-8 w-8 rounded-md object-cover"
+                className="h-12 w-12 rounded-md object-cover"
               />
-              <span className="font-display text-lg font-semibold tracking-tight">{APP_NAME}</span>
+              <span className="font-display text-3xl font-bold tracking-tight">{APP_NAME}</span>
             </div>
             <p className="mt-4 max-w-xs text-sm text-muted-foreground">
               Bridging the world&apos;s most valuable assets with the world&apos;s most efficient

@@ -18,12 +18,13 @@ import type {
   IEndpointItem,
   IFeatureCard,
   IFeatureItem,
+  IFooterSection,
   ILifecycleStep,
   INavLink,
   ISecurityItem,
   ISocialLink,
   ITrustItem,
-  IFooterSection,
+  TFooterLinkInput,
 } from "../types";
 
 export const NAV_LINKS: INavLink[] = [
@@ -125,15 +126,15 @@ export const SECURITY_ITEMS: ISecurityItem[] = [
   },
 ];
 
-export const PRODUCT_LINKS: string[] = [
+export const PRODUCT_LINKS: TFooterLinkInput[] = [
   "Asset Management",
   "Internal Review Workflow",
   "Ownership Registry",
   "Stellar Integration",
 ];
 
-export const RESOURCE_LINKS: string[] = [
-  "Documentation",
+export const RESOURCE_LINKS: TFooterLinkInput[] = [
+  { label: "Documentation", href: "/docs" },
   "API Reference",
   "Legal Frameworks",
   "Security Audit",
@@ -142,11 +143,15 @@ export const RESOURCE_LINKS: string[] = [
 export const FOOTER_SECTIONS: IFooterSection[] = [
   {
     title: "Product",
-    links: PRODUCT_LINKS.map((label) => ({ label, href: "#" })),
+    links: PRODUCT_LINKS.map((item) =>
+      typeof item === "string" ? { label: item, href: "#" } : item
+    ),
   },
   {
     title: "Resources",
-    links: RESOURCE_LINKS.map((label) => ({ label, href: "#" })),
+    links: RESOURCE_LINKS.map((item) =>
+      typeof item === "string" ? { label: item, href: "#" } : item
+    ),
   },
 ];
 

@@ -35,6 +35,8 @@ export interface IFooterLink {
   href: string;
 }
 
+export type TFooterLinkInput = string | IFooterLink;
+
 export interface IFooterSection {
   title: string;
   links: IFooterLink[];
