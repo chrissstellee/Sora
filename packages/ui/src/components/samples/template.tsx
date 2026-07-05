@@ -15,13 +15,7 @@ import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Switch } from "../ui/switch";
 import { Textarea } from "../ui/textarea";
 import { AlertDialogDemo } from "./AlertDialogSample";
@@ -367,7 +361,8 @@ export default function Template() {
                 <div>
                   <p className="mb-1 text-xs text-muted-foreground">font-mono</p>
                   <code className="font-mono text-sm text-secondary">
-                    const sora = &#123; network: &quot;Stellar&quot;, status: &quot;Ready&quot; &#125;
+                    const sora = &#123; network: &quot;Stellar&quot;, status: &quot;Ready&quot;
+                    &#125;
                   </code>
                 </div>
               </CardContent>

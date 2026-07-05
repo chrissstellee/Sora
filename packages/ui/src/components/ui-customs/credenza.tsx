@@ -85,10 +85,7 @@ function Credenza({
    Trigger
 ───────────────────────────────────────────────────────────── */
 
-function CredenzaTrigger({
-  children,
-  ...props
-}: React.ComponentProps<typeof DialogTrigger>) {
+function CredenzaTrigger({ children, ...props }: React.ComponentProps<typeof DialogTrigger>) {
   const { isDesktop } = useCredenza();
   const Trigger = isDesktop ? DialogTrigger : DrawerTrigger;
   return <Trigger {...props}>{children}</Trigger>;
@@ -98,10 +95,7 @@ function CredenzaTrigger({
    Close
 ───────────────────────────────────────────────────────────── */
 
-function CredenzaClose({
-  children,
-  ...props
-}: React.ComponentProps<typeof DialogClose>) {
+function CredenzaClose({ children, ...props }: React.ComponentProps<typeof DialogClose>) {
   const { isDesktop } = useCredenza();
   const Close = isDesktop ? DialogClose : DrawerClose;
   return <Close {...props}>{children}</Close>;
@@ -133,10 +127,7 @@ function CredenzaContent({
   if (isDesktop) {
     return (
       <DialogContent
-        className={cn(
-          "flex flex-col gap-0 p-0",
-          className,
-        )}
+        className={cn("flex flex-col gap-0 p-0", className)}
         style={{
           maxHeight,
           maxWidth: `min(calc(100vw - 2rem), ${maxWidth})`,
@@ -148,10 +139,7 @@ function CredenzaContent({
   }
 
   return (
-    <DrawerContent
-      className={cn("flex flex-col", className)}
-      style={{ maxHeight }}
-    >
+    <DrawerContent className={cn("flex flex-col", className)} style={{ maxHeight }}>
       {/* vaul drag handle is rendered inside DrawerContent automatically */}
       {children}
     </DrawerContent>
@@ -162,18 +150,12 @@ function CredenzaContent({
    Header  (fixed — sits above the scrollable body)
 ───────────────────────────────────────────────────────────── */
 
-function CredenzaHeader({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function CredenzaHeader({ className, ...props }: React.ComponentProps<"div">) {
   const { isDesktop } = useCredenza();
   const Header = isDesktop ? DialogHeader : DrawerHeader;
   return (
     <>
-      <Header
-        className={cn("px-6 pt-6 pb-4", !isDesktop && "text-left", className)}
-        {...props}
-      />
+      <Header className={cn("px-6 pt-6 pb-4", !isDesktop && "text-left", className)} {...props} />
       <Separator />
     </>
   );
@@ -183,11 +165,7 @@ function CredenzaHeader({
    Body  (the scrollable region)
 ───────────────────────────────────────────────────────────── */
 
-function CredenzaBody({
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div">) {
+function CredenzaBody({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
     <ScrollArea className="flex-1 overflow-y-auto">
       <div className={cn("px-6 py-4", className)} {...props}>
@@ -201,10 +179,7 @@ function CredenzaBody({
    Footer  (fixed — sits below the scrollable body)
 ───────────────────────────────────────────────────────────── */
 
-function CredenzaFooter({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+function CredenzaFooter({ className, ...props }: React.ComponentProps<"div">) {
   const { isDesktop } = useCredenza();
   const Footer = isDesktop ? DialogFooter : DrawerFooter;
   return (
@@ -219,10 +194,7 @@ function CredenzaFooter({
    Title
 ───────────────────────────────────────────────────────────── */
 
-function CredenzaTitle({
-  className,
-  ...props
-}: React.ComponentProps<typeof DialogTitle>) {
+function CredenzaTitle({ className, ...props }: React.ComponentProps<typeof DialogTitle>) {
   const { isDesktop } = useCredenza();
   const Title = isDesktop ? DialogTitle : DrawerTitle;
   return <Title className={cn(className)} {...props} />;

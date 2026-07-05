@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  AlertCircle,
-  BellRing,
-  CheckCircle2,
-  Info,
-  Loader2,
-  TriangleAlert,
-  X,
-} from "lucide-react";
+import { AlertCircle, BellRing, CheckCircle2, Info, Loader2, TriangleAlert, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "../ui/button";
@@ -16,7 +8,14 @@ import { Button } from "../ui/button";
 type ToastVariant = {
   label: string;
   icon: React.ReactNode;
-  variant: "default" | "secondary" | "outline" | "ghost" | "gradient" | "outlineSecondary" | "destructive";
+  variant:
+    | "default"
+    | "secondary"
+    | "outline"
+    | "ghost"
+    | "gradient"
+    | "outlineSecondary"
+    | "destructive";
   action: () => void;
 };
 

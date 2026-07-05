@@ -35,16 +35,13 @@ export function AlertDialogDemo() {
             </AlertDialogMedia>
             <AlertDialogTitle>Delete account permanently?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. All your data will be permanently
-              removed from our servers and you will lose access immediately.
+              This action cannot be undone. All your data will be permanently removed from our
+              servers and you will lose access immediately.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              onClick={() => console.log("Account deleted")}
-            >
+            <AlertDialogAction variant="destructive" onClick={() => console.log("Account deleted")}>
               Delete Account
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -63,16 +60,13 @@ export function AlertDialogDemo() {
             </AlertDialogMedia>
             <AlertDialogTitle>Confirm this action?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to proceed? This will apply the changes
-              immediately to your current session.
+              Are you sure you want to proceed? This will apply the changes immediately to your
+              current session.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="gradient"
-              onClick={() => console.log("Confirmed")}
-            >
+            <AlertDialogAction variant="gradient" onClick={() => console.log("Confirmed")}>
               Confirm
             </AlertDialogAction>
           </AlertDialogFooter>

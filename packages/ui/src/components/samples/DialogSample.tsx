@@ -3,6 +3,7 @@
 import { Copy, Link2 } from "lucide-react";
 import { useState } from "react";
 
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
@@ -39,9 +39,7 @@ export function DialogCloseButton() {
         {/* Header — fixed */}
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle>Share link</DialogTitle>
-          <DialogDescription>
-            Anyone who has this link will be able to view this.
-          </DialogDescription>
+          <DialogDescription>Anyone who has this link will be able to view this.</DialogDescription>
         </DialogHeader>
 
         <Separator />
@@ -50,7 +48,10 @@ export function DialogCloseButton() {
         <ScrollArea className="flex-1 overflow-y-auto">
           <div className="flex flex-col gap-4 px-6 py-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="link-demo" className="font-mono text-xs text-muted-foreground uppercase">
+              <Label
+                htmlFor="link-demo"
+                className="font-mono text-xs text-muted-foreground uppercase"
+              >
                 Shareable URL
               </Label>
               <div className="flex items-center gap-2">
@@ -74,9 +75,10 @@ export function DialogCloseButton() {
             </div>
 
             <div className="rounded-lg border border-border bg-muted/30 p-3">
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
-                This link will expire in <span className="font-semibold text-foreground">7 days</span>.
-                You can revoke access at any time from your account settings.
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                This link will expire in{" "}
+                <span className="font-semibold text-foreground">7 days</span>. You can revoke access
+                at any time from your account settings.
               </p>
             </div>
           </div>

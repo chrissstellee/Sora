@@ -18,13 +18,7 @@ import {
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Textarea } from "../ui/textarea";
 
 export function DrawerDialogDemo() {
@@ -72,30 +66,18 @@ export function DrawerDialogDemo() {
   );
 }
 
-function ProfileForm({
-  className,
-  id,
-}: React.ComponentProps<"form">) {
+function ProfileForm({ className, id }: React.ComponentProps<"form">) {
   return (
-    <form
-      id={id}
-      className={cn("flex flex-col gap-4 font-sans", className)}
-    >
+    <form id={id} className={cn("flex flex-col gap-4 font-sans", className)}>
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label
-            htmlFor="first-name"
-            className="font-mono text-xs text-muted-foreground uppercase"
-          >
+          <Label htmlFor="first-name" className="font-mono text-xs text-muted-foreground uppercase">
             First Name
           </Label>
           <Input id="first-name" placeholder="John" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label
-            htmlFor="last-name"
-            className="font-mono text-xs text-muted-foreground uppercase"
-          >
+          <Label htmlFor="last-name" className="font-mono text-xs text-muted-foreground uppercase">
             Last Name
           </Label>
           <Input id="last-name" placeholder="Doe" />
@@ -109,18 +91,11 @@ function ProfileForm({
         >
           Email
         </Label>
-        <Input
-          type="email"
-          id="profile-email"
-          placeholder="user@soranetwork.com"
-        />
+        <Input type="email" id="profile-email" placeholder="user@soranetwork.com" />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label
-          htmlFor="profile-role"
-          className="font-mono text-xs text-muted-foreground uppercase"
-        >
+        <Label htmlFor="profile-role" className="font-mono text-xs text-muted-foreground uppercase">
           Role
         </Label>
         <Select>
@@ -137,10 +112,7 @@ function ProfileForm({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <Label
-          htmlFor="profile-bio"
-          className="font-mono text-xs text-muted-foreground uppercase"
-        >
+        <Label htmlFor="profile-bio" className="font-mono text-xs text-muted-foreground uppercase">
           Bio
         </Label>
         <Textarea
