@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, EyeOff, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Layers, MessageSquare, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import Loading from "../common/loading";
@@ -15,8 +15,19 @@ import { Checkbox } from "../ui/checkbox";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { ScrollArea } from "../ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Switch } from "../ui/switch";
+import { Textarea } from "../ui/textarea";
+import { AlertDialogDemo } from "./AlertDialogSample";
+import { DialogCloseButton } from "./DialogSample";
 import ReactAlertSample from "./ReactAlertSample";
+import { DrawerDialogDemo } from "./responsive-dialog";
 
 export default function Template() {
   const [showPassword, setShowPassword] = useState(false);
@@ -149,12 +160,15 @@ export default function Template() {
         {/* 3. Form Input Elements */}
         <Card className="w-full" variant="default">
           <CardHeader>
-            <CardTitle className="text-lg font-bold">Form & Field Controls</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg font-bold">
+              <Layers className="size-4 text-secondary" /> Form &amp; Field Controls
+            </CardTitle>
             <CardDescription className="text-xs">
-              Demonstrates Input fields, checkboxes, and switch toggles.
+              Demonstrates Input fields, checkboxes, switches, select dropdowns, and text areas.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            {/* Left column */}
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label
@@ -189,6 +203,43 @@ export default function Template() {
                   </button>
                 </div>
               </div>
+
+              {/* Select */}
+              <div className="flex flex-col gap-1.5">
+                <Label
+                  htmlFor="select-demo"
+                  className="font-mono text-xs text-muted-foreground uppercase"
+                >
+                  Select Dropdown
+                </Label>
+                <Select>
+                  <SelectTrigger id="select-demo" className="w-full">
+                    <SelectValue placeholder="Choose a network" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="stellar">Stellar Mainnet</SelectItem>
+                    <SelectItem value="testnet">Stellar Testnet</SelectItem>
+                    <SelectItem value="futurenet">Stellar Futurenet</SelectItem>
+                    <SelectItem value="localnet">Local Network</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Textarea */}
+              <div className="flex flex-col gap-1.5">
+                <Label
+                  htmlFor="textarea-demo"
+                  className="font-mono text-xs text-muted-foreground uppercase"
+                >
+                  Text Area
+                </Label>
+                <Textarea
+                  id="textarea-demo"
+                  placeholder="Describe your use case..."
+                  className="min-h-[80px] resize-none"
+                />
+              </div>
+
               <div className="mt-2 flex items-center gap-2">
                 <Checkbox id="check-demo" defaultChecked />
                 <Label
@@ -200,6 +251,7 @@ export default function Template() {
               </div>
             </div>
 
+            {/* Right column */}
             <div className="flex flex-col justify-center gap-4">
               <div className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
                 <div className="flex flex-col gap-0.5">
@@ -223,7 +275,71 @@ export default function Template() {
           </CardContent>
         </Card>
 
-        {/* 4. Original showcases styled to match */}
+        {/* 4. Overlay & Dialog Components */}
+        <div className="flex w-full flex-col gap-4">
+          <div className="px-1">
+            <h2 className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
+              Overlay &amp; Dialog Components
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Alert Dialog */}
+            <Card variant="default">
+              <CardHeader>
+                <CardTitle className="text-base font-bold">Alert Dialog</CardTitle>
+                <CardDescription className="text-xs">
+                  Confirmation dialogs for irreversible or important actions.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex min-h-[90px] items-center justify-center">
+                <AlertDialogDemo />
+              </CardContent>
+            </Card>
+
+            {/* Dialog */}
+            <Card variant="default">
+              <CardHeader>
+                <CardTitle className="text-base font-bold">Dialog</CardTitle>
+                <CardDescription className="text-xs">
+                  Scrollable modal dialog with fixed header and footer.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex min-h-[90px] items-center justify-center">
+                <DialogCloseButton />
+              </CardContent>
+            </Card>
+
+            {/* Toasts */}
+            <Card variant="default">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base font-bold">
+                  <MessageSquare className="size-4 text-secondary" /> Toast Notifications
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Sonner toast variants — default, success, warning, error, info, and loading.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex min-h-[90px] items-center justify-center">
+                <ReactAlertSample />
+              </CardContent>
+            </Card>
+
+            {/* Responsive Dialog */}
+            <Card variant="default">
+              <CardHeader>
+                <CardTitle className="text-base font-bold">Responsive Dialog</CardTitle>
+                <CardDescription className="text-xs">
+                  Dialog on desktop · Drawer on mobile. Content is scrollable, header/footer fixed.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex min-h-[90px] items-center justify-center">
+                <DrawerDialogDemo />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* 5. Original showcases styled to match */}
         <div className="flex w-full flex-col gap-4">
           <div className="px-1">
             <h2 className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
@@ -251,19 +367,9 @@ export default function Template() {
                 <div>
                   <p className="mb-1 text-xs text-muted-foreground">font-mono</p>
                   <code className="font-mono text-sm text-secondary">
-                    const sora = &#123; network: "Stellar", status: "Ready" &#125;
+                    const sora = &#123; network: &quot;Stellar&quot;, status: &quot;Ready&quot; &#125;
                   </code>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Toast Example */}
-            <Card variant="default">
-              <CardHeader>
-                <CardTitle className="text-base font-bold">Toast Alerts</CardTitle>
-              </CardHeader>
-              <CardContent className="flex min-h-[120px] items-center justify-center">
-                <ReactAlertSample />
               </CardContent>
             </Card>
 
@@ -295,7 +401,7 @@ export default function Template() {
             </Card>
 
             {/* Loading Loaders */}
-            <Card variant="default" className="md:col-span-2">
+            <Card variant="default">
               <CardHeader>
                 <CardTitle className="text-base font-bold">Asynchronous Loaders</CardTitle>
               </CardHeader>
