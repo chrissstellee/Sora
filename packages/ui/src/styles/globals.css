@@ -160,16 +160,16 @@
     -webkit-text-fill-color: var(--foreground) !important;
     caret-color: var(--foreground);
 
+    /* Border radius */
+    border-radius: 0.5rem !important;
+
     /* Fill */
     -webkit-box-shadow: 0 0 0 1000px var(--background) inset !important;
     box-shadow: 0 0 0 1000px var(--background) inset !important;
 
     /* Border */
-    border: 1px solid var(--border) !important;
-
-    /* Prevent Chrome's default appearance */
-    -webkit-background-clip: text;
-    background-clip: padding-box;
+    border-top: 1px solid var(--border) !important;
+    border-bottom: 1px solid var(--border) !important;
 
     transition: background-color 99999s ease-in-out 0s;
   }

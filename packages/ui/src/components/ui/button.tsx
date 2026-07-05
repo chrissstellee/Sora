@@ -20,13 +20,13 @@ const buttonVariants = cva(
         gradient:
           "bg-linear-120 from-primary via-soft-destructive to-secondary text-foreground hover:opacity-90",
         outlineSecondary:
-          "border border-secondary bg-transparent text-secondary hover:bg-secondary/10",
+          "border border-soft-secondary bg-transparent text-soft-secondary hover:bg-soft-secondary/10",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
+        default: "h-10 px-4 py-2 has-[>svg]:px-3",
         xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        lg: "h-11 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-9",
         "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-8",
@@ -69,8 +69,14 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     >
-      {loading && <Loading className="mr-2" />}
-      {children}
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {loading && <Loading className="mr-2" />}
+          {children}
+        </>
+      )}
     </Comp>
   );
 }
