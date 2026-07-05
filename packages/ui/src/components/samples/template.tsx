@@ -8,7 +8,7 @@ import { LoadingButton } from "../common/loading/loading-button";
 import LoadingDots from "../common/loading/loading-dots";
 import LoadingFull from "../common/loading/loading-full";
 import { AdvancedDateRangePicker } from "../ui-customs/advance-range-date-picker";
-import { Badge } from "../ui-customs/badge";
+import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Checkbox } from "../ui/checkbox";
