@@ -12,7 +12,7 @@ export function Hero() {
     <section className="relative isolate overflow-hidden pt-24 pb-20 sm:pt-32 sm:pb-28">
       <div className="absolute inset-0 -z-10">
         <Aurora
-          colorStops={["#7c3aed", "#facc15", "#5227FF"]}
+          colorStops={["#380f80", "#7c3aed", "#a16682"]}
           blend={0.45}
           amplitude={1.2}
           speed={0.6}
@@ -26,7 +26,7 @@ export function Hero() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-card/30 px-4 py-1.5 font-mono text-xs tracking-wide text-foreground"
         >
-          Now Live: v4.2 Enterprise Workflow Updates
+          Now Live: Enterprise Workflow Updates
         </motion.div>
 
         <motion.h1
@@ -37,7 +37,7 @@ export function Hero() {
         >
           Enterprise Infrastructure for
           <br />
-          <span className="bg-linear-to-r from-primary via-soft-destructive to-secondary bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-soft-primary via-soft-destructive to-soft-secondary bg-clip-text text-transparent">
             Real-World Asset Tokenization.
           </span>
         </motion.h1>
