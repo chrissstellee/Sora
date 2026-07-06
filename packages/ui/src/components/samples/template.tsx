@@ -230,7 +230,7 @@ export default function Template() {
                 <Textarea
                   id="textarea-demo"
                   placeholder="Describe your use case..."
-                  className="min-h-[80px] resize-none"
+                  className="min-h-20 resize-none"
                 />
               </div>
 
@@ -382,6 +382,7 @@ export default function Template() {
                 <Badge variant="warning">Warning</Badge>
                 <Badge variant="info">Info</Badge>
                 <Badge variant="error">Error</Badge>
+                <Badge variant="gray">Gray</Badge>
               </CardContent>
             </Card>
 
