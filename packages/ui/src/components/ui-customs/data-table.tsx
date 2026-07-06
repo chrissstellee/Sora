@@ -1,32 +1,13 @@
 "use client";
 
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronsUpDown, ChevronUp, X } from "lucide-react";
 import * as React from "react";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsUpDown,
-  ChevronUp,
-  X,
-} from "lucide-react";
 
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import {
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 
 export type SortDirection = "asc" | "desc";
 
@@ -108,16 +89,10 @@ export function DataTable<TData>({
   containerClassName,
   maxHeight,
 }: DataTableProps<TData>) {
-  const [sort, setSort] = React.useState<DataTableSort | null>(
-    defaultSort ?? null,
-  );
+  const [sort, setSort] = React.useState<DataTableSort | null>(defaultSort ?? null);
   const [internalPage, setInternalPage] = React.useState(1);
-  const [pageSize, setPageSize] = React.useState(
-    defaultPageSize ?? pageSizeOptions[0] ?? 10,
-  );
-  const [internalSelected, setInternalSelected] = React.useState<
-    Array<string | number>
-  >([]);
+  const [pageSize, setPageSize] = React.useState(defaultPageSize ?? pageSizeOptions[0] ?? 10);
+  const [internalSelected, setInternalSelected] = React.useState<Array<string | number>>([]);
 
   const page = pageProp ?? internalPage;
   const setPage = onPageChange ?? setInternalPage;
@@ -203,9 +178,7 @@ export function DataTable<TData>({
 
   const toggleRow = (key: string | number) => {
     setSelectedKeys(
-      selectedKeys.includes(key)
-        ? selectedKeys.filter((k) => k !== key)
-        : [...selectedKeys, key],
+      selectedKeys.includes(key) ? selectedKeys.filter((k) => k !== key) : [...selectedKeys, key],
     );
   };
 
@@ -230,10 +203,7 @@ export function DataTable<TData>({
         containerClassName,
       )}
     >
-      <div
-        className={cn("overflow-auto", className)}
-        style={maxHeight ? { maxHeight } : undefined}
-      >
+      <div className={cn("overflow-auto", className)} style={maxHeight ? { maxHeight } : undefined}>
         <table className="w-full caption-bottom text-sm" data-slot="table">
           <TableHeader>
             <TableRow className="border-b border-border bg-muted hover:bg-muted">
@@ -264,7 +234,7 @@ export function DataTable<TData>({
                         type="button"
                         onClick={() => handleSort(column.key)}
                         className={cn(
-                          "inline-flex items-center gap-1.5 uppercase tracking-wider transition-colors hover:text-foreground",
+                          "inline-flex items-center gap-1.5 tracking-wider uppercase transition-colors hover:text-foreground",
                           isSorted && "text-foreground",
                         )}
                       >
@@ -291,7 +261,10 @@ export function DataTable<TData>({
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={colSpan} className="h-32 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={colSpan}
+                  className="h-32 text-center text-sm text-muted-foreground"
+                >
                   Loading…
                 </TableCell>
               </TableRow>
@@ -334,7 +307,10 @@ export function DataTable<TData>({
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={colSpan} className="h-32 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={colSpan}
+                  className="h-32 text-center text-sm text-muted-foreground"
+                >
                   {emptyMessage}
                 </TableCell>
               </TableRow>
@@ -344,82 +320,87 @@ export function DataTable<TData>({
       </div>
 
       <div className="flex w-full flex-col-reverse items-stretch gap-3 border-t border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-  <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-start sm:gap-3">
-    <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
-      <SelectTrigger size="sm" className="w-[110px]">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {pageSizeOptions.map((size) => (
-          <SelectItem key={size} value={String(size)}>
-            Show {size}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+        <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-start sm:gap-3">
+          <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
+            <SelectTrigger size="sm" className="w-[110px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {pageSizeOptions.map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  Show {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-    <p className="text-center text-sm text-muted-foreground sm:text-left">
-      {totalCount === 0
-        ? `No ${itemLabel}`
-        : `Showing ${startIndex}-${endIndex} of ${totalCount.toLocaleString()} ${itemLabel}`}
-    </p>
+          <p className="text-center text-sm text-muted-foreground sm:text-left">
+            {totalCount === 0
+              ? `No ${itemLabel}`
+              : `Showing ${startIndex}-${endIndex} of ${totalCount.toLocaleString()} ${itemLabel}`}
+          </p>
 
-    {sort && (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={resetSort}
-        className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
-      >
-        <X className="size-3.5" />
-        <span className="hidden sm:inline">Reset sort</span>
-      </Button>
-    )}
-  </div>
+          {sort && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetSort}
+              className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-3.5" />
+              <span className="hidden sm:inline">Reset sort</span>
+            </Button>
+          )}
+        </div>
 
-  <div className="flex w-full items-center justify-center gap-1 overflow-x-auto sm:w-auto sm:justify-end">
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      onClick={() => setPage(Math.max(1, currentPage - 1))}
-      disabled={currentPage <= 1}
-      className="shrink-0"
-    >
-      <ChevronLeft className="size-4" />
-    </Button>
-
-    {visiblePages.map((p, index) => {
-      const prev = index > 0 ? visiblePages[index - 1] : undefined;
-      const showEllipsisBefore = prev !== undefined && p - prev > 1;
-      const isActive = p === currentPage;
-
-      return (
-        <React.Fragment key={p}>
-          {showEllipsisBefore && <span className="px-1 text-sm text-muted-foreground">…</span>}
+        <div className="flex w-full items-center justify-center gap-1 overflow-x-auto sm:w-auto sm:justify-end">
           <Button
-            variant={isActive ? "default" : "ghost"}
+            variant="ghost"
             size="icon-sm"
-            onClick={() => setPage(p)}
-            aria-current={isActive ? "page" : undefined}
-            className={cn("shrink-0 text-sm", !isActive && "text-muted-foreground hover:text-foreground")}
+            onClick={() => setPage(Math.max(1, currentPage - 1))}
+            disabled={currentPage <= 1}
+            className="shrink-0"
           >
-            {p}
+            <ChevronLeft className="size-4" />
           </Button>
-        </React.Fragment>
-      );
-    })}
 
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
-      disabled={currentPage >= pageCount}
-      className="shrink-0"
-    >
-      <ChevronRight className="size-4" />
-    </Button>
-  </div>
-</div>
+          {visiblePages.map((p, index) => {
+            const prev = index > 0 ? visiblePages[index - 1] : undefined;
+            const showEllipsisBefore = prev !== undefined && p - prev > 1;
+            const isActive = p === currentPage;
+
+            return (
+              <React.Fragment key={p}>
+                {showEllipsisBefore && (
+                  <span className="px-1 text-sm text-muted-foreground">…</span>
+                )}
+                <Button
+                  variant={isActive ? "default" : "ghost"}
+                  size="icon-sm"
+                  onClick={() => setPage(p)}
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "shrink-0 text-sm",
+                    !isActive && "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {p}
+                </Button>
+              </React.Fragment>
+            );
+          })}
+
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
+            disabled={currentPage >= pageCount}
+            className="shrink-0"
+          >
+            <ChevronRight className="size-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
