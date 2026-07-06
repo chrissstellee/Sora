@@ -1,17 +1,13 @@
-import type { TAssetStatus, TAssetType } from "../lib/types";
+import { ASSET_CATEGORY_OPTIONS } from "../../constants/asset-category-options";
+
+import type { TAssetStatus } from "../lib/types";
 
 export interface FilterOption {
   label: string;
   value: string;
 }
 
-export const TYPE_FILTER_OPTIONS: FilterOption[] = [
-  { label: "All Types", value: "all" },
-  { label: "Real Estate", value: "Real Estate" satisfies TAssetType },
-  { label: "Aviation", value: "Aviation" satisfies TAssetType },
-  { label: "Energy", value: "Energy" satisfies TAssetType },
-  { label: "Maritime", value: "Maritime" satisfies TAssetType },
-];
+export const TYPE_FILTER_OPTIONS = [{ value: "all", label: "Type" }, ...ASSET_CATEGORY_OPTIONS];
 
 export const STATUS_FILTER_OPTIONS: FilterOption[] = [
   { label: "All Statuses", value: "all" },

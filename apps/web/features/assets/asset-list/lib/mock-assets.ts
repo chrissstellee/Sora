@@ -1,6 +1,8 @@
-import type { IAsset, IAssetStats, TAssetType } from "./types";
+import { TAssetCategory } from "../../lib/types";
 
-const TYPES: TAssetType[] = ["Real Estate", "Aviation", "Energy", "Maritime"];
+import type { IAsset, IAssetStats } from "./types";
+
+const TYPES: TAssetCategory[] = ["Real Estate", "Aviation", "Energy", "Maritime"];
 const STATUSES: IAsset["status"][] = ["Tokenized", "Review", "Draft"];
 const BLOCKCHAIN_STATES: IAsset["blockchain"][] = ["Issued", "Ready", "Not Issued"];
 const COUNTRIES = ["United States", "United Kingdom", "Singapore", "UAE", "Germany"];
@@ -26,7 +28,7 @@ const OWNERS = [
   "Northstar Infrastructure",
 ];
 
-function nameForType(type: TAssetType, seed: number) {
+function nameForType(type: TAssetCategory, seed: number) {
   const pool =
     type === "Real Estate"
       ? BUILDING_NAMES
@@ -38,7 +40,7 @@ function nameForType(type: TAssetType, seed: number) {
   return pool[seed % pool.length]!;
 }
 
-function prefixForType(type: TAssetType) {
+function prefixForType(type: TAssetCategory) {
   return type === "Real Estate"
     ? "LON"
     : type === "Aviation"

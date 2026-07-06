@@ -89,7 +89,7 @@ export function AssetDetailsSheet({ asset, open, onOpenChange }: AssetDetailsShe
         )}
 
         <SheetFooter className="flex-row border-t border-border">
-          <Button variant="outline" className="flex-1">
+          <Button variant="outlineSecondary" className="flex-1">
             Manage Docs
           </Button>
           <Button variant="gradient" className="flex-1">

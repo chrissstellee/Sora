@@ -20,7 +20,7 @@ export function AssetsHeader() {
           Export Assets
         </Button>
         <Button variant="gradient" asChild>
-          <Link href="/assets/new">
+          <Link href="/assets/create">
             <Plus />
             Add Asset
           </Link>

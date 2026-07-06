@@ -1,4 +1,4 @@
-import { AssetsPage } from "@/features/assets";
+import { AssetsPage } from "@/features/assets/asset-list";
 
 export default function Assets() {
   return <AssetsPage />;
