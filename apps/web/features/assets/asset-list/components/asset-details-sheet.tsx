@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
 import {
@@ -9,7 +11,7 @@ import {
   SheetTitle,
 } from "@repo/ui/components/ui/sheet";
 
-import { IAssetLifecycleProgress } from "./asset-lifecycle-progress";
+import { AssetLifecycleProgress } from "../../components/asset-lifecycle-progress";
 
 import type { IAsset } from "../lib/types";
 
@@ -63,7 +65,7 @@ export function AssetDetailsSheet({ asset, open, onOpenChange }: AssetDetailsShe
                     : asset.lifecycle.currentStep}
                 </Badge>
               </div>
-              <IAssetLifecycleProgress lifecycle={asset.lifecycle} />
+              <AssetLifecycleProgress lifecycle={asset.lifecycle} />
             </section>
 
             <section className="rounded-md border border-border bg-muted/30 p-3">
@@ -89,8 +91,8 @@ export function AssetDetailsSheet({ asset, open, onOpenChange }: AssetDetailsShe
         )}
 
         <SheetFooter className="flex-row border-t border-border">
-          <Button variant="outlineSecondary" className="flex-1">
-            Manage Docs
+          <Button variant="outlineSecondary" className="flex-1" asChild>
+            <Link href={`/assets/${asset?.assetId}`}>Manage Docs</Link>
           </Button>
           <Button variant="gradient" className="flex-1">
             Edit Details
