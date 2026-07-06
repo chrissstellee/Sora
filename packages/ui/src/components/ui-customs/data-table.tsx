@@ -345,10 +345,10 @@ export function DataTable<TData>({
               variant="ghost"
               size="sm"
               onClick={resetSort}
-              className="h-7 gap-1 px-2 text-xs text-muted-foreground hover:text-foreground"
+              className="h-7 gap-1 px-2 text-xs text-destructive hover:text-destructive"
             >
               <X className="size-3.5" />
-              <span className="hidden sm:inline">Reset sort</span>
+              <span className="hidden sm:inline">Reset Sort</span>
             </Button>
           )}
         </div>
