@@ -1,6 +1,6 @@
 import { cn } from "@repo/ui/lib/utils";
 
-import { LIFECYCLE_STEPS } from "../constants/lifecycle-steps";
+import { LIFECYCLE_STEPS } from "../constants/asset-list";
 
 import type { IAssetLifecycle } from "../lib/types";
 

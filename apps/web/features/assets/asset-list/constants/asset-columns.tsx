@@ -5,7 +5,6 @@ import { cn } from "@repo/ui/lib/utils";
 
 import type { IAsset, TAssetStatus, TBlockchainStatus } from "../lib/types";
 import type { DataTableColumn } from "@repo/ui/components/ui-customs/data-table";
-import type * as React from "react";
 
 const TYPE_ICON: Record<IAsset["type"], React.ElementType> = {
   "Real Estate": Building2,

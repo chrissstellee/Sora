@@ -16,7 +16,7 @@ import {
   COUNTRY_FILTER_OPTIONS,
   STATUS_FILTER_OPTIONS,
   TYPE_FILTER_OPTIONS,
-} from "../constants/filter-options";
+} from "../constants/asset-list";
 
 import type { AssetFiltersState } from "../hooks/use-asset-filters";
 

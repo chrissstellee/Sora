@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 
-import { CREATE_ASSET_STEPS } from "../constants/steps-config";
+import { CREATE_ASSET_STEPS } from "../constants/create-asset";
 import { createAssetFormSchema } from "../lib/schema";
 
 import type { CreateAssetFormValues } from "../lib/schema";
