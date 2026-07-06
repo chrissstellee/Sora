@@ -1,6 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 
-import type { IAuthCard, IAuthLink, IAuthNotice, IAuthNoticeItem, IAuthPrompt } from "../types";
+import type { IAuthCard, IAuthLink, IAuthNotice, IAuthNoticeItem, IAuthPrompt } from "../lib/types";
 
 export const AUTH_CARD: Record<"login" | "register", IAuthCard> = {
   login: {
