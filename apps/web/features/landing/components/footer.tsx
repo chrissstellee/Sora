@@ -4,7 +4,7 @@ import { APP_NAME } from "@/core/constants";
 
 import { FOOTER_SECTIONS, SOCIALS } from "../constants/landing";
 
-import type { IFooterLink } from "../types";
+import type { IFooterLink } from "../lib/types";
 
 function renderFooterLink(link: IFooterLink, className: string) {
   if (link.href === "#") {

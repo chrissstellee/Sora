@@ -25,7 +25,7 @@ import type {
   ISocialLink,
   ITrustItem,
   TFooterLinkInput,
-} from "../types";
+} from "../lib/types";
 
 export const NAV_LINKS: INavLink[] = [
   { label: "Problems", href: "#problems" },
