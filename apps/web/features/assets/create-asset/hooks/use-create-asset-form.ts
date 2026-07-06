@@ -1,13 +1,20 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
+import { useForm } from "react-hook-form";
 
 import { CREATE_ASSET_STEPS } from "../constants/steps-config";
+import { createAssetFormSchema } from "../lib/schema";
 
+import type { CreateAssetFormValues } from "../lib/schema";
 import type {
   IBasicInformation,
   ICreateAssetFormState,
   IOwnershipDetails,
   IUploadedDocument,
 } from "../lib/types";
+import type { UseFormReturn } from "react-hook-form";
 
 const EMPTY_BASIC_INFORMATION: IBasicInformation = {
   assetName: "",
@@ -33,7 +40,8 @@ export interface UseCreateAssetFormResult {
   form: ICreateAssetFormState;
   currentStepIndex: number;
   completionPercent: number;
-  goNext: () => void;
+  formMethods: UseFormReturn<CreateAssetFormValues>;
+  goNext: () => Promise<void>;
   goBack: () => void;
   goToStep: (index: number) => void;
   updateBasicInformation: (patch: Partial<IBasicInformation>) => void;
@@ -68,18 +76,51 @@ export function useCreateAssetForm(): UseCreateAssetFormResult {
     },
   ]);
 
+  const formMethods = useForm<CreateAssetFormValues>({
+    resolver: zodResolver(createAssetFormSchema),
+    mode: "onChange",
+    defaultValues: {
+      basicInformation: EMPTY_BASIC_INFORMATION,
+      ownershipDetails: EMPTY_OWNERSHIP_DETAILS,
+    },
+  });
+
   const lastStepIndex = CREATE_ASSET_STEPS.length - 1;
 
-  const goNext = () => setCurrentStepIndex((i) => Math.min(lastStepIndex, i + 1));
+  const goNext = async () => {
+    const activeStep = CREATE_ASSET_STEPS[currentStepIndex];
+    if (!activeStep) return;
+
+    // Validate current step
+    if (activeStep.key === "basic-information") {
+      const isValid = await formMethods.trigger("basicInformation");
+      if (isValid) {
+        setCurrentStepIndex((i) => Math.min(lastStepIndex, i + 1));
+      }
+    } else if (activeStep.key === "ownership-details") {
+      const isValid = await formMethods.trigger("ownershipDetails");
+      if (isValid) {
+        setCurrentStepIndex((i) => Math.min(lastStepIndex, i + 1));
+      }
+    } else {
+      // supporting-documents and review-submit don't need validation
+      setCurrentStepIndex((i) => Math.min(lastStepIndex, i + 1));
+    }
+  };
+
   const goBack = () => setCurrentStepIndex((i) => Math.max(0, i - 1));
   const goToStep = (index: number) =>
     setCurrentStepIndex(Math.max(0, Math.min(lastStepIndex, index)));
 
-  const updateBasicInformation = (patch: Partial<IBasicInformation>) =>
+  const updateBasicInformation = (patch: Partial<IBasicInformation>) => {
     setBasicInformation((prev) => ({ ...prev, ...patch }));
+    formMethods.setValue("basicInformation", { ...basicInformation, ...patch });
+  };
 
-  const updateOwnershipDetails = (patch: Partial<IOwnershipDetails>) =>
+  const updateOwnershipDetails = (patch: Partial<IOwnershipDetails>) => {
     setOwnershipDetails((prev) => ({ ...prev, ...patch }));
+    formMethods.setValue("ownershipDetails", { ...ownershipDetails, ...patch });
+  };
 
   const addDocuments = (files: File[]) => {
     const newDocs: IUploadedDocument[] = files.map((file, index) => ({
@@ -105,6 +146,7 @@ export function useCreateAssetForm(): UseCreateAssetFormResult {
     form: { basicInformation, ownershipDetails, documents },
     currentStepIndex,
     completionPercent,
+    formMethods,
     goNext,
     goBack,
     goToStep,
