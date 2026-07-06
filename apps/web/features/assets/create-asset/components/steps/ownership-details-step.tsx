@@ -19,7 +19,7 @@ import {
 } from "@repo/ui/components/ui/select";
 import { Textarea } from "@repo/ui/components/ui/textarea";
 
-import { OWNERSHIP_TYPE_OPTIONS } from "../../constants/ownership-type-options";
+import { OWNERSHIP_TYPE_OPTIONS } from "../../constants/create-asset";
 
 import type { CreateAssetFormValues } from "../../lib/schema";
 import type { IOwnershipDetails } from "../../lib/types";

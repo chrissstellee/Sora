@@ -14,7 +14,7 @@ import { BasicInformationStep } from "./components/steps/basic-information-step"
 import { OwnershipDetailsStep } from "./components/steps/ownership-details-step";
 import { ReviewSubmitStep } from "./components/steps/review-submit-step";
 import { SupportingDocumentsStep } from "./components/steps/supporting-documents-step";
-import { CREATE_ASSET_STEPS } from "./constants/steps-config";
+import { CREATE_ASSET_STEPS } from "./constants/create-asset";
 import { useCreateAssetForm } from "./hooks/use-create-asset-form";
 
 export function CreateAssetPage() {

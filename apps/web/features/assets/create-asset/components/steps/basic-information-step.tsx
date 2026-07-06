@@ -19,8 +19,8 @@ import {
 } from "@repo/ui/components/ui/select";
 import { Textarea } from "@repo/ui/components/ui/textarea";
 
-import { ASSET_CATEGORY_OPTIONS } from "../../../constants/asset-category-options";
-import { CURRENCY_OPTIONS } from "../../constants/currency-options";
+import { ASSET_CATEGORY_OPTIONS } from "../../../constants/assets";
+import { CURRENCY_OPTIONS } from "../../constants/create-asset";
 
 import type { CreateAssetFormValues } from "../../lib/schema";
 import type { IBasicInformation } from "../../lib/types";
