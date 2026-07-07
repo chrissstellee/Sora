@@ -115,6 +115,8 @@ export function DocumentsTab({ asset }: DocumentsTabProps) {
               data={MOCK_DOCUMENTS}
               rowKey={(row) => row.id}
               itemLabel="documents"
+              emptyMessage="No records match your filters."
+              maxHeight="400px"
             />
           </CardContent>
         </Card>
