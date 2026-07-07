@@ -177,4 +177,3 @@ export const MOCK_EVENTS: ITimelineEvent[] = [
     icon: PlusCircle,
   },
 ];
-

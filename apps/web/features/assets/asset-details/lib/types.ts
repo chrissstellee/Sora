@@ -68,4 +68,3 @@ export interface ITimelineEvent {
     confirmations: string;
   };
 }
-
