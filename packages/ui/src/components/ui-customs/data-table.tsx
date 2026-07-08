@@ -53,6 +53,8 @@ export interface DataTableProps<TData> {
   /** Controlled current page (1-indexed). Omit to let the table manage it internally. */
   page?: number;
   onPageChange?: (page: number) => void;
+  /** Shows the page-size select, "Showing X-Y of Z" summary, and page controls. Default true. */
+  showPagination?: boolean;
 
   /** Label used in the "Showing X-Y of Z {itemLabel}" summary */
   itemLabel?: string;
@@ -81,6 +83,7 @@ export function DataTable<TData>({
   defaultPageSize,
   page: pageProp,
   onPageChange,
+  showPagination = true,
   itemLabel = "results",
   emptyMessage = "No results.",
   isLoading = false,
@@ -319,88 +322,90 @@ export function DataTable<TData>({
         </table>
       </div>
 
-      <div className="flex w-full flex-col-reverse items-stretch gap-3 border-t border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-start sm:gap-3">
-          <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
-            <SelectTrigger size="sm" className="w-[110px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {pageSizeOptions.map((size) => (
-                <SelectItem key={size} value={String(size)}>
-                  Show {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {showPagination && (
+        <div className="flex w-full flex-col-reverse items-stretch gap-3 border-t border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-start sm:gap-3">
+            <Select value={String(pageSize)} onValueChange={(value) => setPageSize(Number(value))}>
+              <SelectTrigger size="sm" className="w-[110px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {pageSizeOptions.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    Show {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-          <p className="text-center text-sm text-muted-foreground sm:text-left">
-            {totalCount === 0
-              ? `No ${itemLabel}`
-              : `Showing ${startIndex}-${endIndex} of ${totalCount.toLocaleString()} ${itemLabel}`}
-          </p>
+            <p className="text-center text-sm text-muted-foreground sm:text-left">
+              {totalCount === 0
+                ? `No ${itemLabel}`
+                : `Showing ${startIndex}-${endIndex} of ${totalCount.toLocaleString()} ${itemLabel}`}
+            </p>
 
-          {sort && (
+            {sort && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetSort}
+                className="h-7 gap-1 px-2 text-xs text-destructive hover:text-destructive"
+              >
+                <X className="size-3.5" />
+                <span className="hidden sm:inline">Reset Sort</span>
+              </Button>
+            )}
+          </div>
+
+          <div className="flex w-full items-center justify-center gap-1 overflow-x-auto sm:w-auto sm:justify-end">
             <Button
               variant="ghost"
-              size="sm"
-              onClick={resetSort}
-              className="h-7 gap-1 px-2 text-xs text-destructive hover:text-destructive"
+              size="icon-sm"
+              onClick={() => setPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage <= 1}
+              className="shrink-0"
             >
-              <X className="size-3.5" />
-              <span className="hidden sm:inline">Reset Sort</span>
+              <ChevronLeft className="size-4" />
             </Button>
-          )}
-        </div>
 
-        <div className="flex w-full items-center justify-center gap-1 overflow-x-auto sm:w-auto sm:justify-end">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setPage(Math.max(1, currentPage - 1))}
-            disabled={currentPage <= 1}
-            className="shrink-0"
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
+            {visiblePages.map((p, index) => {
+              const prev = index > 0 ? visiblePages[index - 1] : undefined;
+              const showEllipsisBefore = prev !== undefined && p - prev > 1;
+              const isActive = p === currentPage;
 
-          {visiblePages.map((p, index) => {
-            const prev = index > 0 ? visiblePages[index - 1] : undefined;
-            const showEllipsisBefore = prev !== undefined && p - prev > 1;
-            const isActive = p === currentPage;
-
-            return (
-              <React.Fragment key={p}>
-                {showEllipsisBefore && (
-                  <span className="px-1 text-sm text-muted-foreground">…</span>
-                )}
-                <Button
-                  variant={isActive ? "default" : "ghost"}
-                  size="icon-sm"
-                  onClick={() => setPage(p)}
-                  aria-current={isActive ? "page" : undefined}
-                  className={cn(
-                    "shrink-0 text-sm",
-                    !isActive && "text-muted-foreground hover:text-foreground",
+              return (
+                <React.Fragment key={p}>
+                  {showEllipsisBefore && (
+                    <span className="px-1 text-sm text-muted-foreground">…</span>
                   )}
-                >
-                  {p}
-                </Button>
-              </React.Fragment>
-            );
-          })}
+                  <Button
+                    variant={isActive ? "default" : "ghost"}
+                    size="icon-sm"
+                    onClick={() => setPage(p)}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "shrink-0 text-sm",
+                      !isActive && "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {p}
+                  </Button>
+                </React.Fragment>
+              );
+            })}
 
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
-            disabled={currentPage >= pageCount}
-            className="shrink-0"
-          >
-            <ChevronRight className="size-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setPage(Math.min(pageCount, currentPage + 1))}
+              disabled={currentPage >= pageCount}
+              className="shrink-0"
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
