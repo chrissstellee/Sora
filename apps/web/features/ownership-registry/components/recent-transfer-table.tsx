@@ -30,6 +30,7 @@ export function RecentTransferTable({ transfers }: { transfers: ITransferFeedEnt
           data={transfers}
           rowKey={(row) => row.id}
           showPagination={false}
+          maxHeight="400px"
           containerClassName="min-w-0 rounded-none border-0"
           className="[&_table]:table-fixed"
         />
