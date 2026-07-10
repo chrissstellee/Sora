@@ -1,8 +1,8 @@
 import { FileText, Info, Trash2 } from "lucide-react";
 
 import { FileDropzone } from "@repo/ui/components/ui-customs/file-dropzone";
-import { Card, CardDescription } from "@repo/ui/components/ui/card";
 import { Button } from "@repo/ui/components/ui/button";
+import { Card, CardDescription } from "@repo/ui/components/ui/card";
 
 import type { IUploadedDocument } from "../../lib/types";
 
@@ -19,7 +19,7 @@ export function SupportingDocumentsStep({
 }: SupportingDocumentsStepProps) {
   return (
     <div className="flex flex-col gap-4">
-      <Card className="p-4 flex flex-row items-center gap-3 bg-muted/40 mb-4">
+      <Card className="mb-4 flex flex-row items-center gap-3 bg-muted/40 p-4">
         <Info className="size-6 text-secondary" />
         <CardDescription className="text-xs text-muted-foreground">
           Sora securely stores supporting documentation as part of the asset record. Legal

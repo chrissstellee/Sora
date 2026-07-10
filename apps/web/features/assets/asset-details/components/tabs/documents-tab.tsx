@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+
 import { DataTable } from "@repo/ui/components/ui-customs/data-table";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
