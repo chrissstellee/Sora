@@ -104,7 +104,7 @@ function CredenzaContent({
   children,
   className,
   maxHeight = "85vh",
-  maxWidth = "480px",
+  maxWidth = "700px",
 }: CredenzaContentProps) {
   const { isDesktop } = useCredenza();
 
