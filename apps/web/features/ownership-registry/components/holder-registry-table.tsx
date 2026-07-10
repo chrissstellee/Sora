@@ -44,7 +44,6 @@ export function HolderRegistryTable({
           emptyMessage="No holders match your filters."
           maxHeight="480px"
           containerClassName="min-w-0"
-          className="[&_table]:table-fixed"
         />
       </CardContent>
     </Card>

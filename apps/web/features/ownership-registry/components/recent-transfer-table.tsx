@@ -32,7 +32,6 @@ export function RecentTransferTable({ transfers }: { transfers: ITransferFeedEnt
           showPagination={false}
           maxHeight="400px"
           containerClassName="min-w-0 rounded-none border-0"
-          className="[&_table]:table-fixed"
         />
       </CardContent>
     </Card>

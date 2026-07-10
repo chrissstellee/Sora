@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { DataTable } from "@repo/ui/components/ui-customs/data-table";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
@@ -105,7 +106,7 @@ export function DocumentsTab({ asset }: DocumentsTabProps) {
                 Documents
               </CardTitle>
               <Button variant="ghost" size="sm" className="gap-1 text-xs text-primary">
-                View All Documents
+                <Link href="/documents">View All Documents</Link>
               </Button>
             </div>
           </CardHeader>
@@ -129,7 +130,7 @@ export function DocumentsTab({ asset }: DocumentsTabProps) {
                 Ownership Registry
               </CardTitle>
               <Button variant="ghost" size="sm" className="gap-1 text-xs text-primary">
-                View Ownership Registry
+                <Link href="/ownership-registry">View Ownership Registry</Link>
               </Button>
             </div>
           </CardHeader>
@@ -150,7 +151,7 @@ export function DocumentsTab({ asset }: DocumentsTabProps) {
                 Recent Activity
               </CardTitle>
               <Button variant="ghost" size="sm" className="gap-1 text-xs text-primary">
-                View Complete Activity Log
+                <Link href="/activity-log">View Complete Activity Log</Link>
               </Button>
             </div>
           </CardHeader>

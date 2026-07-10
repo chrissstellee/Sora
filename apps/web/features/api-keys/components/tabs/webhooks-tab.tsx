@@ -64,7 +64,7 @@ export function WebhooksTab() {
             isLoading={isLoading}
             showPagination={false}
             containerClassName="min-w-0 rounded-none border-0"
-            maxHeight="450px"
+            maxHeight="400px"
           />
         </CardContent>
       </Card>
@@ -113,9 +113,8 @@ export function WebhooksTab() {
             emptyMessage="No deliveries yet."
             isLoading={isLoading}
             showPagination={false}
-            maxHeight="450px"
+            maxHeight="400px"
             containerClassName="min-w-0 rounded-none border-0"
-            className="[&_table]:table-fixed"
           />
         </CardContent>
       </Card>

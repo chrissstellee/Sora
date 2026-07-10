@@ -61,8 +61,10 @@ export function AppSidebar() {
           variant="gradient"
           className="w-full justify-center group-data-[collapsible=icon]:px-0"
         >
-          <Plus className="size-4" />
-          <span className="group-data-[collapsible=icon]:hidden">Mint New Asset</span>
+          <Link href="/assets/create" className="flex items-center gap-2">
+            <Plus className="size-4" />
+            <span className="group-data-[collapsible=icon]:hidden">Mint New Asset</span>
+          </Link>
         </Button>
       </SidebarHeader>
 

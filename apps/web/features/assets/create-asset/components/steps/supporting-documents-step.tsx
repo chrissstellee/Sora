@@ -1,7 +1,7 @@
 import { FileText, Info, Trash2 } from "lucide-react";
 
 import { FileDropzone } from "@repo/ui/components/ui-customs/file-dropzone";
-import { Alert, AlertDescription } from "@repo/ui/components/ui/alert";
+import { Card, CardDescription } from "@repo/ui/components/ui/card";
 import { Button } from "@repo/ui/components/ui/button";
 
 import type { IUploadedDocument } from "../../lib/types";
@@ -19,14 +19,14 @@ export function SupportingDocumentsStep({
 }: SupportingDocumentsStepProps) {
   return (
     <div className="flex flex-col gap-4">
-      <Alert className="border-border bg-muted/40">
-        <Info className="size-4" />
-        <AlertDescription className="text-xs text-muted-foreground">
+      <Card className="p-4 flex flex-row items-center gap-3 bg-muted/40 mb-4">
+        <Info className="size-6 text-secondary" />
+        <CardDescription className="text-xs text-muted-foreground">
           Sora securely stores supporting documentation as part of the asset record. Legal
           validation and regulatory compliance remain the responsibility of the issuing
           organization.
-        </AlertDescription>
-      </Alert>
+        </CardDescription>
+      </Card>
 
       <FileDropzone
         acceptedFormats={["PDF", "DOCX", "JPG", "PNG"]}
@@ -60,9 +60,6 @@ export function SupportingDocumentsStep({
               <div className="flex shrink-0 items-center gap-1">
                 <Button variant="ghost" size="sm" className="text-xs">
                   Preview
-                </Button>
-                <Button variant="ghost" size="sm" className="text-xs">
-                  Replace
                 </Button>
                 <Button
                   variant="ghost"

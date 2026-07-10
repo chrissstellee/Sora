@@ -30,9 +30,8 @@ export function ApiKeysTab() {
             itemLabel="keys"
             emptyMessage="No API keys yet."
             isLoading={isLoading}
-            maxHeight="450px"
+            maxHeight="400px"
             containerClassName="min-w-0 rounded-none border-0"
-            className="[&_table]:table-fixed"
           />
         </CardContent>
       </Card>
@@ -54,9 +53,8 @@ export function ApiKeysTab() {
             emptyMessage="No recent activity."
             isLoading={isLoading}
             showPagination={false}
-            maxHeight="450px"
+            maxHeight="400px"
             containerClassName="min-w-0 rounded-none border-0"
-            className="[&_table]:table-fixed"
           />
         </CardContent>
       </Card>

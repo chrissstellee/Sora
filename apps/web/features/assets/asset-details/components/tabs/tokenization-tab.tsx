@@ -350,13 +350,13 @@ export function TokenizationTab({ asset }: TokenizationTabProps) {
               <CardTitle className="font-mono text-sm font-semibold tracking-wider text-soft-primary uppercase">
                 Recent Activity
               </CardTitle>
-              <Button
+              {/* <Button
                 variant="ghost"
                 size="sm"
                 className="h-auto p-0 text-[10px] font-semibold text-primary uppercase"
               >
                 View Log
-              </Button>
+              </Button> */}
             </div>
           </CardHeader>
           <CardContent>

@@ -31,7 +31,7 @@ export function TokenizationQueueTable({
       defaultPageSize={25}
       itemLabel="queued entries"
       emptyMessage="No entries match your filters."
-      maxHeight="450px"
+      maxHeight="480px"
     />
   );
 }
