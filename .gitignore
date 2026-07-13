@@ -42,3 +42,8 @@ docs/*
 !docs/phase-0/**
 !docs/adr/
 !docs/adr/**
+!docs/prds/
+docs/prds/*
+!docs/prds/prd-sora-2026-07-13/
+docs/prds/prd-sora-2026-07-13/*
+!docs/prds/prd-sora-2026-07-13/phase-1-sprint-plan.md

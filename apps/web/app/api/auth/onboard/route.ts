@@ -1,0 +1,88 @@
+import crypto from "node:crypto";
+
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+
+import { convexClient } from "@/core/lib/convex-client";
+import { api } from "@repo/backend/api";
+
+const SESSION_COOKIE_NAME = "sora_session";
+const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+
+function generateOpaqueToken(prefix: string): string {
+  return `${prefix}_${crypto.randomBytes(32).toString("hex")}`;
+}
+
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { grantToken, orgName, email } = body;
+
+    if (!grantToken || !orgName) {
+      return NextResponse.json(
+        { error: "Missing required onboarding parameters (grantToken, orgName)" },
+        { status: 400 },
+      );
+    }
+
+    const grantTokenHash = hashToken(grantToken);
+    const rawSessionToken = generateOpaqueToken("sora");
+    const sessionTokenHash = hashToken(rawSessionToken);
+    const sessionExpiresAt = Date.now() + SESSION_TTL;
+
+    let onboardResult;
+    try {
+      onboardResult = await convexClient.mutation(api.auth.onboard, {
+        grantTokenHash,
+        orgName,
+        email: email || undefined,
+        sessionTokenHash,
+        sessionExpiresAt,
+      });
+    } catch (convexError) {
+      console.error("Convex onboarding failed:", convexError);
+      return NextResponse.json(
+        { error: convexError instanceof Error ? convexError.message : "Onboarding failed" },
+        { status: 400 },
+      );
+    }
+
+    await convexClient.mutation(api.auth.logActivity, {
+      organizationId: onboardResult.organizationId,
+      userId: onboardResult.userId,
+      eventType: "wallet_onboard",
+      outcome: "success",
+      correlationId: crypto.randomUUID(),
+      metadata: JSON.stringify({
+        walletAddress: onboardResult.walletAddress,
+        orgName: onboardResult.orgName,
+        email,
+      }),
+    });
+
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieStore = await cookies();
+    cookieStore.set(SESSION_COOKIE_NAME, rawSessionToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: SESSION_TTL / 1000,
+    });
+
+    return NextResponse.json({
+      status: "authenticated",
+      user: {
+        walletAddress: onboardResult.walletAddress,
+        orgName: onboardResult.orgName,
+      },
+    });
+  } catch (error) {
+    console.error("Onboard route error:", error);
+    return NextResponse.json({ error: "Internal server error during onboarding" }, { status: 500 });
+  }
+}

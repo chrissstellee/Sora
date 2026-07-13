@@ -1,7 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@repo/ui/components/ui/button";
 import { Checkbox } from "@repo/ui/components/ui/checkbox";
@@ -14,54 +17,60 @@ import {
   FormMessage,
 } from "@repo/ui/components/ui/form";
 import { InputGroup, InputGroupInput } from "@repo/ui/components/ui/input-group";
-import { InputPassword } from "@repo/ui/components/ui/input-password";
 
-import { useRegister } from "../../hooks/use-register";
-import { registerSchema, type RegisterValues } from "../../lib/schema";
-import { PasswordStrengthMeter } from "./password-strength-meter";
+import { useAuth } from "../../hooks/use-auth";
+
+const onboardSchema = z.object({
+  organization: z.string().min(2, "Enter your organization name"),
+  email: z.string().email("Enter a valid email address").optional().or(z.literal("")),
+  agreeToTerms: z.boolean().refine((value) => value === true, {
+    message: "You must agree to the demonstration policy",
+  }),
+});
+
+type OnboardValues = z.infer<typeof onboardSchema>;
 
 const labelClass = "text-xs font-medium tracking-widest text-muted-foreground uppercase";
 
 export function RegisterForm() {
-  const { register, isSubmitting, serverError } = useRegister();
-  const form = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
+  const router = useRouter();
+  const { authState, onboard, error } = useAuth();
+
+  const form = useForm<OnboardValues>({
+    resolver: zodResolver(onboardSchema),
     defaultValues: {
-      fullName: "",
       organization: "",
       email: "",
-      password: "",
       agreeToTerms: false,
     },
   });
 
-  const password = form.watch("password");
+  // Redirect to login if user is not in the onboarding-required state
+  useEffect(() => {
+    if (
+      authState !== "onboarding-required" &&
+      authState !== "verifying" &&
+      authState !== "authenticated"
+    ) {
+      router.push("/login");
+    }
+  }, [authState, router]);
+
+  const onSubmit = async (values: OnboardValues) => {
+    await onboard(values.organization, values.email || undefined);
+  };
+
+  const isSubmitting = authState === "verifying";
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(register)} className="flex flex-col gap-6" noValidate>
-        <FormField
-          control={form.control}
-          name="fullName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className={labelClass}>Full Name</FormLabel>
-              <FormControl>
-                <InputGroup>
-                  <InputGroupInput placeholder="John Doe" {...field} />
-                </InputGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
         <FormField
           control={form.control}
           name="organization"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className={labelClass}>Organization</FormLabel>
+              <FormLabel className={labelClass}>Organization Name</FormLabel>
               <FormControl>
                 <InputGroup>
                   <InputGroupInput placeholder="Acme Tokenized Assets" {...field} />
@@ -77,27 +86,20 @@ export function RegisterForm() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className={labelClass}>Corporate Email</FormLabel>
+              <FormLabel className={labelClass}>
+                Contact Email{" "}
+                <span className="text-[10px] font-normal tracking-normal text-muted-foreground lowercase">
+                  (Optional — profile data only)
+                </span>
+              </FormLabel>
               <FormControl>
                 <InputGroup>
-                  <InputGroupInput type="email" placeholder="john@sora.enterprise" {...field} />
+                  <InputGroupInput type="email" placeholder="contact@company.com" {...field} />
                 </InputGroup>
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className={labelClass}>Secure Password</FormLabel>
-              <FormControl>
-                <InputPassword placeholder="••••••••••••" {...field} />
-              </FormControl>
-              <PasswordStrengthMeter password={password} />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Email is never used for login, credentials recovery, or authorization.
+              </p>
               <FormMessage />
             </FormItem>
           )}
@@ -125,15 +127,16 @@ export function RegisterForm() {
           )}
         />
 
-        {serverError && <p className="form-error text-center">{serverError}</p>}
+        {error && <p className="form-error text-center text-xs text-destructive">{error}</p>}
 
         <Button
           type="submit"
           variant="gradient"
-          className="mt-4 w-full font-semibold"
+          className="mt-4 h-11 w-full font-semibold"
           loading={isSubmitting}
+          disabled={isSubmitting}
         >
-          Create Sora Account
+          Provision Organization Workspace
         </Button>
       </form>
     </Form>
