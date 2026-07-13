@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
 import { Keypair, TransactionBuilder } from "@stellar/stellar-sdk";
+import { describe, expect, it } from "vitest";
+
 import { generateSEP10Challenge, verifyChallengeMatch, verifySEP10Challenge } from "./auth.js";
 
 describe("auth tests", () => {

@@ -19,6 +19,7 @@ import {
 import { InputGroup, InputGroupInput } from "@repo/ui/components/ui/input-group";
 
 import { useAuth } from "../../hooks/use-auth";
+import { shouldRedirectFromRegister } from "../lib/navigation";
 
 const onboardSchema = z.object({
   organization: z.string().min(2, "Enter your organization name"),
@@ -34,7 +35,7 @@ const labelClass = "text-xs font-medium tracking-widest text-muted-foreground up
 
 export function RegisterForm() {
   const router = useRouter();
-  const { authState, onboard, error } = useAuth();
+  const { authState, onboard, error, isLoading } = useAuth();
 
   const form = useForm<OnboardValues>({
     resolver: zodResolver(onboardSchema),
@@ -47,14 +48,10 @@ export function RegisterForm() {
 
   // Redirect to login if user is not in the onboarding-required state
   useEffect(() => {
-    if (
-      authState !== "onboarding-required" &&
-      authState !== "verifying" &&
-      authState !== "authenticated"
-    ) {
+    if (shouldRedirectFromRegister(authState, isLoading)) {
       router.push("/login");
     }
-  }, [authState, router]);
+  }, [authState, isLoading, router]);
 
   const onSubmit = async (values: OnboardValues) => {
     await onboard(values.organization, values.email || undefined);

@@ -7,6 +7,7 @@ import { convexClient } from "@/core/lib/convex-client";
 import { api } from "@repo/backend/api";
 
 const SESSION_COOKIE_NAME = "sora_session";
+const ONBOARDING_COOKIE_NAME = "sora_onboarding";
 
 function hashToken(token: string): string {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -18,7 +19,10 @@ export async function GET() {
     const cookie = cookieStore.get(SESSION_COOKIE_NAME);
 
     if (!cookie || !cookie.value) {
-      return NextResponse.json({ authenticated: false });
+      return NextResponse.json({
+        authenticated: false,
+        onboardingRequired: Boolean(cookieStore.get(ONBOARDING_COOKIE_NAME)?.value),
+      });
     }
 
     const tokenHash = hashToken(cookie.value);
@@ -27,7 +31,10 @@ export async function GET() {
     });
 
     if (!session) {
-      const response = NextResponse.json({ authenticated: false });
+      const response = NextResponse.json({
+        authenticated: false,
+        onboardingRequired: Boolean(cookieStore.get(ONBOARDING_COOKIE_NAME)?.value),
+      });
       response.cookies.set(SESSION_COOKIE_NAME, "", { maxAge: 0, path: "/" });
       return response;
     }

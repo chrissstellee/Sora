@@ -3,8 +3,10 @@
 import { LogOut, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { APP_NAME } from "@/core/constants";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import { Button } from "@repo/ui/components/ui/button";
 import {
   Sidebar as SidebarPrimitive,
@@ -28,7 +30,15 @@ import { NAV_SECTIONS } from "../constants/nav-links";
 export function AppSidebar() {
   const pathname = usePathname();
   const { state } = useSidebar();
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const isCollapsed = state === "collapsed";
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    await logout();
+  };
 
   return (
     <SidebarPrimitive collapsible="icon">
@@ -112,11 +122,13 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Log Out">
-              <Link href="/login">
-                <LogOut />
-                <span>Log Out</span>
-              </Link>
+            <SidebarMenuButton
+              tooltip="Log Out"
+              onClick={() => void handleLogout()}
+              disabled={isLoggingOut}
+            >
+              <LogOut />
+              <span>{isLoggingOut ? "Logging Out..." : "Log Out"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

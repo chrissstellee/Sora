@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type AuthState =
   | "disconnected"
@@ -17,63 +17,78 @@ export type AuthState =
   | "recoverable-error";
 
 interface KitInstance {
-  authModal: (params?: unknown) => Promise<{ address: string }>;
+  authModal: () => Promise<{ address: string }>;
+  disconnect: () => Promise<void>;
   signTransaction: (
     xdr: string,
     opts: { networkPassphrase: string; address: string },
   ) => Promise<{ signedTxXdr: string }>;
 }
 
+let walletKitPromise: Promise<KitInstance> | null = null;
+
+function initializeWalletKit(): Promise<KitInstance> {
+  if (!walletKitPromise) {
+    walletKitPromise = Promise.all([
+      import("@creit-tech/stellar-wallets-kit"),
+      import("@creit-tech/stellar-wallets-kit/modules/utils"),
+    ])
+      .then(([swk, utils]) => {
+        swk.StellarWalletsKit.init({ modules: utils.defaultModules() });
+        return swk.StellarWalletsKit;
+      })
+      .catch((error) => {
+        walletKitPromise = null;
+        throw error;
+      });
+  }
+
+  return walletKitPromise as Promise<KitInstance>;
+}
+
 export function useAuth() {
   const router = useRouter();
-  const kitRef = useRef<unknown>(null);
+  const authOperationRef = useRef(0);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [orgName, setOrgName] = useState<string | null>(null);
   const [authState, setAuthState] = useState<AuthState>("disconnected");
   const [error, setError] = useState<string | null>(null);
-  const [grantToken, setGrantToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize StellarWalletsKit dynamically on client side
   useEffect(() => {
     if (typeof window !== "undefined") {
-      Promise.all([
-        import("@creit-tech/stellar-wallets-kit"),
-        import("@creit-tech/stellar-wallets-kit/modules/utils"),
-      ])
-        .then(([swk, utils]) => {
-          const { StellarWalletsKit } = swk;
-          const { defaultModules } = utils;
-
-          StellarWalletsKit.init({
-            modules: defaultModules(),
-          });
-          kitRef.current = StellarWalletsKit;
-        })
-        .catch((err) => {
-          console.error("Failed to initialize StellarWalletsKit:", err);
-          setError("Failed to load Stellar Wallets Kit");
-          setAuthState("recoverable-error");
-        });
+      initializeWalletKit().catch((err) => {
+        console.error("Failed to initialize StellarWalletsKit:", err);
+        setError("Failed to load Stellar Wallets Kit");
+        setAuthState("recoverable-error");
+      });
     }
   }, []);
 
   // Restore session from HTTP cookie on load
   const checkSession = useCallback(async () => {
+    const operation = authOperationRef.current;
     setIsLoading(true);
     try {
       const res = await fetch("/api/auth/me");
       const data = await res.json();
+      if (operation !== authOperationRef.current) return;
+
       if (data.authenticated && data.user) {
         setWalletAddress(data.user.walletAddress);
         setOrgName(data.user.orgName);
         setAuthState("authenticated");
+      } else if (data.onboardingRequired) {
+        setAuthState("onboarding-required");
       } else {
         setAuthState("disconnected");
       }
     } catch (err) {
       console.error("Session check failed:", err);
-      setAuthState("disconnected");
+      if (operation === authOperationRef.current) {
+        setAuthState("disconnected");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -85,17 +100,13 @@ export function useAuth() {
 
   // Connect wallet and sign challenge
   const login = async () => {
-    const currentKit = kitRef.current as KitInstance | null;
-    if (!currentKit) {
-      setError("Stellar Wallets Kit is not initialized");
-      setAuthState("recoverable-error");
-      return;
-    }
-
+    authOperationRef.current += 1;
     setAuthState("connecting");
     setError(null);
 
     try {
+      const currentKit = await initializeWalletKit();
+
       // 1. Prompt user to select wallet and connect
       const { address } = await currentKit.authModal();
       if (!address) {
@@ -156,7 +167,6 @@ export function useAuth() {
         setAuthState("authenticated");
         router.push("/dashboard");
       } else if (verifyData.status === "onboarding-required") {
-        setGrantToken(verifyData.grantToken);
         setAuthState("onboarding-required");
         router.push("/register");
       }
@@ -169,13 +179,7 @@ export function useAuth() {
 
   // Complete onboarding
   const onboard = async (orgNameInput: string, emailInput?: string) => {
-    if (!grantToken) {
-      setError("Missing onboarding grant token. Please sign in again.");
-      setAuthState("disconnected");
-      router.push("/login");
-      return;
-    }
-
+    authOperationRef.current += 1;
     setAuthState("verifying");
     setError(null);
 
@@ -184,7 +188,6 @@ export function useAuth() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          grantToken,
           orgName: orgNameInput,
           email: emailInput || undefined,
         }),
@@ -208,18 +211,27 @@ export function useAuth() {
 
   // Logout session
   const logout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-    } catch (err) {
-      console.error("Logout fetch failed:", err);
-    } finally {
-      // Clear local states
-      setWalletAddress(null);
-      setOrgName(null);
-      setAuthState("disconnected");
-      setGrantToken(null);
-      router.push("/login");
+    authOperationRef.current += 1;
+    setError(null);
+
+    const [sessionResult, walletResult] = await Promise.allSettled([
+      fetch("/api/auth/logout", { method: "POST" }).then((response) => {
+        if (!response.ok) throw new Error("Server session revocation failed");
+      }),
+      initializeWalletKit().then((kit) => kit.disconnect()),
+    ]);
+
+    if (sessionResult.status === "rejected") {
+      console.error("Logout fetch failed:", sessionResult.reason);
     }
+    if (walletResult.status === "rejected") {
+      console.error("Wallet disconnect failed:", walletResult.reason);
+    }
+
+    setWalletAddress(null);
+    setOrgName(null);
+    setAuthState("disconnected");
+    router.push("/login");
   };
 
   return {

@@ -83,7 +83,7 @@ export function verifyChallengeMatch(
     const txSigned = TransactionBuilder.fromXDR(signedXdr, networkPassphrase);
     const txStored = TransactionBuilder.fromXDR(storedXdr, networkPassphrase);
     return txSigned.hash().toString("hex") === txStored.hash().toString("hex");
-  } catch (err) {
+  } catch {
     return false;
   }
 }

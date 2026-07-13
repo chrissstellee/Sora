@@ -9,7 +9,9 @@ import { api } from "@repo/backend/api";
 import { verifySEP10Challenge, verifyChallengeMatch } from "@repo/backend/stellar/auth";
 
 const SESSION_COOKIE_NAME = "sora_session";
+const ONBOARDING_COOKIE_NAME = "sora_onboarding";
 const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+const ONBOARDING_TTL = 15 * 60; // 15 minutes in seconds
 
 function generateOpaqueToken(prefix: string): string {
   return `${prefix}_${crypto.randomBytes(32).toString("hex")}`;
@@ -115,9 +117,18 @@ export async function POST(request: Request) {
         walletAddress: address,
       });
 
+      const isProduction = process.env.NODE_ENV === "production";
+      const cookieStore = await cookies();
+      cookieStore.set(ONBOARDING_COOKIE_NAME, rawGrant, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: "lax",
+        path: "/",
+        maxAge: ONBOARDING_TTL,
+      });
+
       return NextResponse.json({
         status: "onboarding-required",
-        grantToken: rawGrant,
         address,
       });
     }
