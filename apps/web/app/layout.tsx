@@ -1,5 +1,6 @@
-import { Hanken_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
-
+import "@fontsource-variable/hanken-grotesk";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
 import { APP_DESCRIPTION, APP_NAME } from "@/core/constants";
 import { ConvexClientProvider } from "@/core/providers/convex-provider";
 import UiProviders from "@repo/ui/ui-providers";
@@ -7,24 +8,6 @@ import UiProviders from "@repo/ui/ui-providers";
 import type { Metadata } from "next";
 
 import "./globals.css";
-
-const hankenGrotesk = Hanken_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-mono",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://vercel.com"),
@@ -61,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={[hankenGrotesk.variable, inter.variable, jetbrainsMono.variable].join(" ")}>
+      <body>
         <ConvexClientProvider>
           <UiProviders>{children}</UiProviders>
         </ConvexClientProvider>

@@ -73,20 +73,6 @@ export function Footer() {
           <p className="text-xs text-muted-foreground">
             &copy; 2026 Sora Infrastructure. All Rights Reserved.
           </p>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/privacy"
-              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href="/terms"
-              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Terms of Service
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

@@ -8,8 +8,14 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "format:check": "oxfmt --check .",
+    "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
-    "prepare": "husky"
+    "prepare": "husky",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm build && pnpm scan:secrets"
   },
   "devDependencies": {
     "husky": "^9.1.7",
@@ -19,7 +25,7 @@
     "typescript": "6.0.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22 <23"
   },
   "packageManager": "pnpm@10.25.0"
 }

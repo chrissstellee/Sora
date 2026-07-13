@@ -1,110 +1,96 @@
-# Turbo-Next-Convex Template
+# Sora
 
-### Package Manager: `pnpm`
+Sora is a pnpm/Turborepo workspace with a Next.js 16 web application and a Convex backend package. Phase 0 establishes typed Stellar Testnet configuration, executable state contracts, deterministic verification, and an isolated server-side issuance proof.
 
-## Use this template
+> [!WARNING]
+> This repository is Testnet-only. It does not provide Mainnet issuance, production custody, live SEP-10 authentication, or an integrated product issuance flow. Never add a Stellar secret seed to browser code, an environment file committed to Git, Convex data, logs, or evidence.
+
+## Prerequisites
+
+- Node.js 22 (`.nvmrc` pins the major version; `package.json` requires `>=22 <23`)
+- pnpm 10.25.0 (`packageManager` pins the exact version)
+
+With Corepack:
 
 ```bash
-npx create-turbo@latest --example https://github.com/nelwincatalogo/turbo-next-convex [project-name-here]
+corepack enable
+corepack prepare pnpm@10.25.0 --activate
+pnpm install --frozen-lockfile
 ```
 
-## Commands
+## Configure the web application
+
+The root `.env.example` contains public, non-secret Testnet metadata. Copy it to the Next.js application before running or building locally:
+
+```powershell
+Copy-Item .env.example apps/web/.env.local
+```
+
+On macOS or Linux:
 
 ```bash
-# Run dev all apps
+cp .env.example apps/web/.env.local
+```
+
+The accepted values are deliberately exact:
+
+- Network passphrase: `Test SDF Network ; September 2015`
+- Horizon: `https://horizon-testnet.stellar.org`
+- Explorer: `https://stellar.expert/explorer/testnet`
+- UI label: `Stellar Testnet`
+
+Missing, malformed, or mixed-network values fail validation. The browser receives only this public network metadata and the public Convex URL. Account material and signing do not cross the backend boundary.
+
+## Development
+
+```bash
+# Run all persistent development tasks
 pnpm dev
 
-# Run apps/web only
+# Run only the web application on port 3000
 pnpm --filter web dev
 
-# Run build
-pnpm build
-
-# Check types, lint, and format
-pnpm lint:fix
+# Run the Convex development process separately when backend data is needed
+pnpm --filter @repo/backend dev
 ```
 
-## Add new package
+The current Convex schema is still the starter task schema. The Phase 0 issuance contract is exported from `@repo/backend`, tested in isolation, and is not yet wired to durable Convex issuance storage.
+
+## Verification commands
+
+All commands below run from the repository root. The check variants do not rewrite source files.
+
+| Command             | Purpose                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| `pnpm typecheck`    | Generate Next route types and type-check workspace packages                           |
+| `pnpm lint`         | Run Oxlint across the workspace                                                       |
+| `pnpm format:check` | Check formatting without changing files                                               |
+| `pnpm test`         | Run Vitest in the backend and web workspaces                                          |
+| `pnpm build`        | Produce the Next.js production build                                                  |
+| `pnpm scan:secrets` | Scan tracked, unignored, and selected generated files without printing matched values |
+| `pnpm verify`       | Run all checks above in the listed order                                              |
+
+The verified Phase 0 baseline is 52 backend tests plus 2 web tests, zero-warning lint, a production route inventory with neither `/template` nor `/api-keys`, and a secret scan covering at least 383 files.
+
+## Live Testnet spike
+
+The live issuance proof is a manual, network-dependent backend command:
 
 ```bash
-# apps/web
-pnpm --filter web add date-fns
-
-# packages/ui
-pnpm --filter @repo/ui add date-fns
+pnpm --filter @repo/backend spike:testnet
 ```
 
-## Add new app
+It creates new in-memory issuer and distributor keypairs, funds their public accounts through Friendbot, submits a Trustline and payment through Horizon, verifies the resulting balance, and overwrites the sanitized evidence receipt. Friendbot and Horizon are intentionally excluded from required CI.
 
-copy the content of `apps/web` to `apps/docs` and change the name of the app in `turbo.json` and `package.json`
+Read [the spike runbook](docs/phase-0/testnet-spike.md) before running it. The checked-in evidence is at [docs/phase-0/evidence/testnet-issuance.json](docs/phase-0/evidence/testnet-issuance.json).
 
-OR
+## Phase 0 documentation
 
-```bash
-# apps/docs
-pnpm create next-app docs --typescript
-```
+- [State contracts](docs/phase-0/state-contracts.md)
+- [Testnet spike runbook and evidence](docs/phase-0/testnet-spike.md)
+- [Acceptance criteria and verification proof](docs/phase-0/verification.md)
+- [ADR 0001: SEP-10, Next.js, and Convex boundary](docs/adr/0001-sep-10-next-convex-boundary.md)
+- [ADR 0002: Testnet demo account policy](docs/adr/0002-testnet-demo-account-policy.md)
+- [ADR 0003: Issuance idempotency and reconciliation](docs/adr/0003-issuance-idempotency-reconciliation.md)
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library with shadcn components shared by both `web` and `docs` applications
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-
-npx turbo login
-pnpm exec turbo login
-
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-
-turbo link
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-
-npx turbo link
-pnpm exec turbo link
-
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+Implementation and tests are authoritative for runtime behavior. The ADRs record why the boundaries exist; these guides explain how to work within them.

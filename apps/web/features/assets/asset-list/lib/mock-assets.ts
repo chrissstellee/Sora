@@ -68,7 +68,7 @@ function lifecycleFor(
           issued: "Jan 04, 2024",
         },
       },
-      blockchainInfo: { assetCode, network: "Stellar Mainnet", issuerId: "GCSA...992L" },
+      blockchainInfo: { assetCode, network: publicStellarConfig.uiLabel, issuerId: "GCSA...992L" },
     };
   }
 
@@ -78,7 +78,7 @@ function lifecycleFor(
         currentStep: "review",
         completedAt: { create: "Feb 02, 2024", docs: "Feb 06, 2024" },
       },
-      blockchainInfo: { assetCode, network: "Stellar Mainnet", issuerId: "GCSA...441P" },
+      blockchainInfo: { assetCode, network: publicStellarConfig.uiLabel, issuerId: "GCSA...441P" },
     };
   }
 
@@ -87,7 +87,7 @@ function lifecycleFor(
       currentStep: "create",
       completedAt: { create: "Mar 01, 2024" },
     },
-    blockchainInfo: { assetCode, network: "Stellar Mainnet", issuerId: "---" },
+    blockchainInfo: { assetCode, network: publicStellarConfig.uiLabel, issuerId: "---" },
   };
 }
 
@@ -177,3 +177,4 @@ export const MOCK_ASSET_STATS: IAssetStats = {
   archived: 32,
   totalValueLabel: "$2.4B",
 };
+import { publicStellarConfig } from "@/core/config/env";

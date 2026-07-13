@@ -1,6 +1,7 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
+import { publicStellarConfig } from "@/core/config/env";
 import { DataTable } from "@repo/ui/components/ui-customs/data-table";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
@@ -18,7 +19,7 @@ export function LatestTransactions({ transactions }: { transactions: IStellarTra
             Latest Stellar Transactions
           </CardTitle>
           <Button variant="ghost" size="sm" className="gap-1 text-xs text-primary" asChild>
-            <Link href="https://stellar.expert" target="_blank" rel="noreferrer">
+            <Link href={publicStellarConfig.explorerUrl} target="_blank" rel="noreferrer">
               Explore Explorer
               <ExternalLink className="size-3" />
             </Link>

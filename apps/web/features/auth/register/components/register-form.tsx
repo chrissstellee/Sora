@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@repo/ui/components/ui/button";
@@ -118,14 +117,7 @@ export function RegisterForm() {
               </FormControl>
               <div className="flex flex-col gap-1">
                 <FormLabel className="font-sans text-sm text-muted-foreground">
-                  I agree to the{" "}
-                  <Link href="/privacy" className="text-soft-primary hover:underline">
-                    Privacy Policy
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/terms" className="text-soft-primary hover:underline">
-                    Terms of Service
-                  </Link>
+                  I agree to the account and Testnet demonstration policy.
                 </FormLabel>
                 <FormMessage />
               </div>

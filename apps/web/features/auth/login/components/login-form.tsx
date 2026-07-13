@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@repo/ui/components/ui/button";
@@ -62,7 +61,7 @@ export function LoginForm() {
           )}
         />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <FormField
             control={form.control}
             name="rememberMe"
@@ -77,9 +76,6 @@ export function LoginForm() {
               </FormItem>
             )}
           />
-          <Link href="/forgot-password" className="text-sm text-soft-secondary hover:underline">
-            Forgot Password?
-          </Link>
         </div>
 
         {serverError && <p className="form-error text-center">{serverError}</p>}

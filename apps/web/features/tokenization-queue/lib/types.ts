@@ -1,6 +1,6 @@
 export type TIssuanceStatus = "Ready" | "Draft" | "Issued" | "Failed";
 
-export type TIssuanceNetwork = "Stellar Mainnet" | "TBD";
+export type TIssuanceNetwork = typeof TESTNET_UI_LABEL | "TBD";
 
 export interface IIssuanceQueueEntry {
   id: string;
@@ -30,7 +30,7 @@ export interface IRecentActivityEntry {
 }
 
 export interface IStellarNetworkStatus {
-  mainnetHealth: "OPTIMAL" | "DEGRADED" | "DOWN";
+  testnetHealth: "OPTIMAL" | "DEGRADED" | "DOWN";
   baseFee: string;
   syncProgress: number;
   networkLoadPercent: number;
@@ -52,3 +52,4 @@ export interface IBlockchainParams {
   decimals: string;
   totalSupply: string;
 }
+import type { TESTNET_UI_LABEL } from "@repo/backend/stellar/config";

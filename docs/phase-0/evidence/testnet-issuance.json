@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-13T13:38:30.892Z",
+  "startedAt": "2026-07-13T13:38:14.578Z",
+  "network": "Stellar Testnet",
+  "asset": {
+    "code": "SORARJ9PGBJ",
+    "amount": "25",
+    "trustLimit": "1000",
+    "issuer": "GAKSFJLJAIYF3FWTWNMEARGO7EXSBGKKEZD765MIT633NNXGCAEHNQS4"
+  },
+  "accounts": {
+    "issuer": "GAKSFJLJAIYF3FWTWNMEARGO7EXSBGKKEZD765MIT633NNXGCAEHNQS4",
+    "distributor": "GC5RPKVAE7IDC37MZDIIESWVSLPIC6ANBINVN67N6O6SLDRPBQGJAHZF"
+  },
+  "preState": {
+    "issuerSequence": "15404733430759424",
+    "distributorSequence": "15404733430759424",
+    "trustlineExists": false
+  },
+  "operations": {
+    "changeTrust": {
+      "hash": "a278faa82d25786f920ae95e259048e3a3f5e1c9617f2ae7d8438f9f202275a0",
+      "ledger": 3586695,
+      "successful": true,
+      "reconciledAfterUncertainSubmission": false,
+      "precomputedHash": "a278faa82d25786f920ae95e259048e3a3f5e1c9617f2ae7d8438f9f202275a0",
+      "source": "GC5RPKVAE7IDC37MZDIIESWVSLPIC6ANBINVN67N6O6SLDRPBQGJAHZF",
+      "purpose": "trustline"
+    },
+    "issuancePayment": {
+      "hash": "29448364e610ee6e91bd94b2c099a691cabe78799d156bf3396b919735575adc",
+      "ledger": 3586696,
+      "successful": true,
+      "reconciledAfterUncertainSubmission": false,
+      "precomputedHash": "29448364e610ee6e91bd94b2c099a691cabe78799d156bf3396b919735575adc",
+      "source": "GAKSFJLJAIYF3FWTWNMEARGO7EXSBGKKEZD765MIT633NNXGCAEHNQS4",
+      "purpose": "issuance-payment"
+    }
+  },
+  "postState": {
+    "trustlineExists": true,
+    "authorized": true,
+    "authorizationToMaintainLiabilities": "[REDACTED]",
+    "limit": "1000.0000000",
+    "balance": "25.0000000",
+    "lastModifiedLedger": 3586696
+  },
+  "explorer": {
+    "issuer": "https://stellar.expert/explorer/testnet/account/GAKSFJLJAIYF3FWTWNMEARGO7EXSBGKKEZD765MIT633NNXGCAEHNQS4",
+    "distributor": "https://stellar.expert/explorer/testnet/account/GC5RPKVAE7IDC37MZDIIESWVSLPIC6ANBINVN67N6O6SLDRPBQGJAHZF",
+    "changeTrustTransaction": "https://stellar.expert/explorer/testnet/tx/a278faa82d25786f920ae95e259048e3a3f5e1c9617f2ae7d8438f9f202275a0",
+    "issuanceTransaction": "https://stellar.expert/explorer/testnet/tx/29448364e610ee6e91bd94b2c099a691cabe78799d156bf3396b919735575adc"
+  },
+  "policy": "Ephemeral accounts; secrets were kept in memory and are not present in this evidence."
+}

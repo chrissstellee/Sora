@@ -4,6 +4,7 @@ import { ArrowUpRight, Copy, Globe, VerifiedIcon } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
+import { publicStellarConfig } from "@/core/config/env";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
@@ -122,7 +123,7 @@ export function TokenizationTab({ asset }: TokenizationTabProps) {
               <InfoField label="Category" value="Commercial Real Estate" />
               <InfoField
                 label="Network"
-                value={asset.blockchainInfo.network || "Stellar Mainnet"}
+                value={asset.blockchainInfo.network || publicStellarConfig.uiLabel}
               />
               <InfoField label="Total Supply" value={isIssued ? "1,250,000.0000000" : "—"} />
               <InfoField label="Decimals" value="7" />
@@ -232,7 +233,7 @@ export function TokenizationTab({ asset }: TokenizationTabProps) {
                   title="Issued on Stellar"
                   description={
                     isIssued
-                      ? `Transaction confirmed. ${isIssued ? asset.blockchainInfo.assetCode : "DOTW"} is live on Mainnet.`
+                      ? `Demo transaction confirmed. ${isIssued ? asset.blockchainInfo.assetCode : "DOTW"} is live on Testnet.`
                       : "Transaction pending network confirmation."
                   }
                   date={isIssued ? "Oct 24, 14:22" : "Pending"}
@@ -300,7 +301,7 @@ export function TokenizationTab({ asset }: TokenizationTabProps) {
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-muted-foreground">Network</dt>
-                <dd className="font-medium text-foreground">Mainnet</dd>
+                <dd className="font-medium text-foreground">{publicStellarConfig.uiLabel}</dd>
               </div>
               <div className="mt-1 flex items-center justify-between border-t border-border pt-2.5">
                 <dt className="text-muted-foreground">Circulating Supply</dt>

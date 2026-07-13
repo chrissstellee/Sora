@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { publicStellarConfig } from "@/core/config/env";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 import { cn } from "@repo/ui/lib/utils";
@@ -44,10 +45,10 @@ export function WorkspaceHealth({ workspaceHealth }: { workspaceHealth: IWorkspa
           dotClass={WORKSPACE_HEALTH_DOT_CLASS[workspaceHealth.apiGateway]}
         />
         <StatusRow
-          label="Stellar Mainnet"
-          status={workspaceHealth.stellarMainnet}
-          statusClass={WORKSPACE_HEALTH_TEXT_CLASS[workspaceHealth.stellarMainnet]}
-          dotClass={WORKSPACE_HEALTH_DOT_CLASS[workspaceHealth.stellarMainnet]}
+          label={publicStellarConfig.uiLabel}
+          status={workspaceHealth.stellarTestnet}
+          statusClass={WORKSPACE_HEALTH_TEXT_CLASS[workspaceHealth.stellarTestnet]}
+          dotClass={WORKSPACE_HEALTH_DOT_CLASS[workspaceHealth.stellarTestnet]}
         />
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Ledger Sync</span>

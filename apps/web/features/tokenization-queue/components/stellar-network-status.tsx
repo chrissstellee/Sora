@@ -7,7 +7,7 @@ import type { IStellarNetworkStatus } from "../lib/types";
 import type { ElementType } from "react";
 
 const HEALTH_BADGE_VARIANT: Record<
-  IStellarNetworkStatus["mainnetHealth"],
+  IStellarNetworkStatus["testnetHealth"],
   "success" | "warning" | "error"
 > = {
   OPTIMAL: "success",
@@ -51,13 +51,13 @@ export function StellarNetworkStatus({ networkStatus }: { networkStatus: IStella
       <CardContent className="flex flex-col gap-4">
         <StatusRow
           icon={Database}
-          label="Mainnet Health"
+          label="Testnet Health"
           value={
             <Badge
-              variant={HEALTH_BADGE_VARIANT[networkStatus.mainnetHealth]}
+              variant={HEALTH_BADGE_VARIANT[networkStatus.testnetHealth]}
               className="uppercase"
             >
-              {networkStatus.mainnetHealth}
+              {networkStatus.testnetHealth}
             </Badge>
           }
         />

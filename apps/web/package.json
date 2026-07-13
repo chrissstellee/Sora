@@ -6,10 +6,16 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev --port 3000",
+    "lint": "oxlint .",
     "lint:fix": "oxlint --fix . && oxfmt --write . && next typegen && tsc --noEmit",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource-variable/hanken-grotesk": "^5.2.8",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@hookform/resolvers": "^5.2.2",
     "@hookstate/core": "^4.0.2",
     "@hookstate/devtools": "^4.0.3",
@@ -30,10 +36,15 @@
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/lodash.merge": "^4.6.9",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.13",
     "@types/react-dom": "19.2.3",
-    "typescript": "5.9.2"
+    "@vitejs/plugin-react": "6.0.3",
+    "jsdom": "^28.0.0",
+    "typescript": "5.9.2",
+    "vitest": "4.1.10"
   }
 }

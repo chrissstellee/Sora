@@ -111,7 +111,7 @@ export const MOCK_TRANSFERS: ITransfer[] = [
 export const MOCK_EVENTS: ITimelineEvent[] = [
   {
     id: "evt-1",
-    title: "Asset Issued on Mainnet",
+    title: "Demo Asset Issued on Testnet",
     category: "BLOCKCHAIN",
     status: "SUCCESS",
     description:
@@ -122,7 +122,7 @@ export const MOCK_EVENTS: ITimelineEvent[] = [
     blockchainInfo: {
       txHash: "CC4F...9A1C",
       ledger: "53,921,084",
-      network: "Stellar Mainnet",
+      network: publicStellarConfig.uiLabel,
       confirmations: "FINALIZED",
     },
   },
@@ -177,3 +177,4 @@ export const MOCK_EVENTS: ITimelineEvent[] = [
     icon: PlusCircle,
   },
 ];
+import { publicStellarConfig } from "@/core/config/env";

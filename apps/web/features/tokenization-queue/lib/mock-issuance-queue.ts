@@ -83,7 +83,7 @@ function categoryLabel(category: string) {
 }
 
 function networkForStatus(status: IIssuanceQueueEntry["status"]): IIssuanceQueueEntry["network"] {
-  return status === "Draft" ? "TBD" : "Stellar Mainnet";
+  return status === "Draft" ? "TBD" : publicStellarConfig.uiLabel;
 }
 
 function buildEntry(
@@ -131,7 +131,7 @@ const FEATURED_ENTRIES: IIssuanceQueueEntry[] = [
     value: 1.24,
     code: "MNHT2",
     status: "Ready",
-    network: "Stellar Mainnet",
+    network: publicStellarConfig.uiLabel,
     internalReference: "MANHATTAN-SKYLINE-II-RE",
     assetCategory: "Real Estate / Property",
     issuerFacilityId: "STLR-FAC-99101-A",
@@ -157,7 +157,7 @@ const FEATURED_ENTRIES: IIssuanceQueueEntry[] = [
     value: 2.8,
     code: "ZUR4",
     status: "Issued",
-    network: "Stellar Mainnet",
+    network: publicStellarConfig.uiLabel,
     internalReference: "ZURICH-BOND-4-FI",
     assetCategory: "Finance / Fixed Income",
     issuerFacilityId: "STLR-FAC-99304-C",
@@ -170,7 +170,7 @@ const FEATURED_ENTRIES: IIssuanceQueueEntry[] = [
     value: 12.5,
     code: "LGB8",
     status: "Failed",
-    network: "Stellar Mainnet",
+    network: publicStellarConfig.uiLabel,
     internalReference: "LONDON-GOLD-BULLION-PM",
     assetCategory: "Metals / Bullion",
     issuerFacilityId: "STLR-FAC-99418-D",
@@ -217,7 +217,7 @@ export const MOCK_RECENT_ACTIVITY: IRecentActivityEntry[] = [
   {
     id: "act-1",
     type: "success",
-    message: "Zurich Bond #4 successfully issued to Stellar Mainnet",
+    message: `Zurich Bond #4 successfully issued to ${publicStellarConfig.uiLabel}`,
     meta: "3 minutes ago · Block: #92102PL · Fee: 0.0001 XLM",
   },
   {
@@ -230,7 +230,7 @@ export const MOCK_RECENT_ACTIVITY: IRecentActivityEntry[] = [
     id: "act-3",
     type: "error",
     message: "Issuance failed for London Gold Bullion: Insufficient Fees",
-    meta: "42 minutes ago · Network: Stellar Mainnet",
+    meta: `42 minutes ago · Network: ${publicStellarConfig.uiLabel}`,
   },
   {
     id: "act-4",
@@ -247,7 +247,7 @@ export const MOCK_RECENT_ACTIVITY: IRecentActivityEntry[] = [
 ];
 
 export const MOCK_NETWORK_STATUS: IStellarNetworkStatus = {
-  mainnetHealth: "OPTIMAL",
+  testnetHealth: "OPTIMAL",
   baseFee: "100 Stroops",
   syncProgress: 100.0,
   networkLoadPercent: 2.4,
@@ -255,3 +255,4 @@ export const MOCK_NETWORK_STATUS: IStellarNetworkStatus = {
 
 /** Display-only total shown in the pagination footer */
 export const MOCK_TOTAL_QUEUED_ENTRIES = 1284;
+import { publicStellarConfig } from "@/core/config/env";

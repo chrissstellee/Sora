@@ -4,6 +4,7 @@ import { Download, History, Link2, Search } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
+import { publicStellarConfig } from "@/core/config/env";
 import { AdvancedDateRangePicker } from "@repo/ui/components/ui-customs/advance-range-date-picker";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
@@ -320,7 +321,7 @@ export function ActivityTab({ asset: _asset }: ActivityTabProps) {
             </div>
             <div className="mt-1 flex items-center gap-1.5 border-t border-border pt-3.5 text-[10px] font-semibold text-secondary">
               <span className="size-1.5 rounded-full bg-secondary" />
-              CONFIRMED ON STELLAR MAINNET
+              CONFIRMED ON {publicStellarConfig.uiLabel.toUpperCase()}
             </div>
           </CardContent>
         </Card>

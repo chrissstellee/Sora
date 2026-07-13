@@ -13,11 +13,7 @@ export const AUTH_CARD: Record<"login" | "register", IAuthCard> = {
   },
 };
 
-export const AUTH_LINKS: IAuthLink[] = [
-  { href: "/privacy", label: "Privacy Policy" },
-  { href: "/terms", label: "Terms of Service" },
-  { href: "/docs", label: "Documentation" },
-];
+export const AUTH_LINKS: IAuthLink[] = [];
 
 export const AUTH_FOOTER_VERSION = "1.0.0 (MVP)";
 

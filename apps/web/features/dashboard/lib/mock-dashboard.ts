@@ -109,7 +109,7 @@ export const MOCK_DASHBOARD_DATA: IDashboardData = {
 
   workspaceHealth: {
     apiGateway: "OPERATIONAL",
-    stellarMainnet: "HEALTHY",
+    stellarTestnet: "HEALTHY",
     ledgerSyncLag: "0.8s",
   },
 

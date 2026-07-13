@@ -3,7 +3,6 @@ import {
   FilePlus2,
   FileText,
   // History,
-  KeyRound,
   LayoutDashboard,
   Users,
   type LucideIcon,
@@ -41,9 +40,5 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Ownership Registry", href: "/ownership-registry", icon: Users },
       // { label: "Activity Log", href: "/activity-log", icon: History },
     ],
-  },
-  {
-    label: "Developers",
-    links: [{ label: "API Keys", href: "/api-keys", icon: KeyRound }],
   },
 ];

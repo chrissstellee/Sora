@@ -55,7 +55,7 @@ export interface ITokenizationQueueItem {
 
 export interface IWorkspaceHealth {
   apiGateway: "OPERATIONAL" | "DEGRADED" | "DOWN";
-  stellarMainnet: "HEALTHY" | "DEGRADED" | "DOWN";
+  stellarTestnet: "HEALTHY" | "DEGRADED" | "DOWN";
   ledgerSyncLag: string;
 }
 

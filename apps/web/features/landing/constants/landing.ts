@@ -134,7 +134,6 @@ export const PRODUCT_LINKS: TFooterLinkInput[] = [
 ];
 
 export const RESOURCE_LINKS: TFooterLinkInput[] = [
-  { label: "Documentation", href: "/docs" },
   "API Reference",
   "Legal Frameworks",
   "Security Audit",

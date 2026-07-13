@@ -10,7 +10,7 @@ export const TOKENIZATION_STATUS_BADGE_VARIANT: Record<
 };
 
 export const WORKSPACE_HEALTH_DOT_CLASS: Record<
-  IWorkspaceHealth["apiGateway"] | IWorkspaceHealth["stellarMainnet"],
+  IWorkspaceHealth["apiGateway"] | IWorkspaceHealth["stellarTestnet"],
   string
 > = {
   OPERATIONAL: "bg-success",
@@ -20,7 +20,7 @@ export const WORKSPACE_HEALTH_DOT_CLASS: Record<
 };
 
 export const WORKSPACE_HEALTH_TEXT_CLASS: Record<
-  IWorkspaceHealth["apiGateway"] | IWorkspaceHealth["stellarMainnet"],
+  IWorkspaceHealth["apiGateway"] | IWorkspaceHealth["stellarTestnet"],
   string
 > = {
   OPERATIONAL: "text-success",

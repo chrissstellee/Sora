@@ -1,0 +1,7 @@
+.agents/
+.codex/
+packages/backend/convex/_generated/
+node_modules/
+.next/
+.turbo/
+coverage/

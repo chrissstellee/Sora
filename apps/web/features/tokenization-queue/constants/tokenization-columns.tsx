@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { publicStellarConfig } from "@/core/config/env";
 import { Badge } from "@repo/ui/components/ui/badge";
 import { Button } from "@repo/ui/components/ui/button";
 
@@ -128,7 +129,7 @@ export function getTokenizationColumns(
       cell: (row) => (
         <span
           className={
-            row.network === "Stellar Mainnet"
+            row.network === publicStellarConfig.uiLabel
               ? "text-xs font-medium text-foreground"
               : "text-xs font-medium text-muted-foreground"
           }

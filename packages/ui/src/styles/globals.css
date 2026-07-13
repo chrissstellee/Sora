@@ -5,6 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --font-display: "Hanken Grotesk Variable", sans-serif;
+  --font-sans: "Inter Variable", sans-serif;
+  --font-mono: "JetBrains Mono Variable", monospace;
   --background: #08080a;
   --foreground: #ffffff;
   --card: #131319;

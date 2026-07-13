@@ -24,7 +24,7 @@ export const MOCK_API_KEYS: IApiKeyEntry[] = [
   {
     id: "key_1",
     name: "Production Main",
-    maskedKey: "sk_live_****A92K",
+    maskedKey: "[API KEY REMOVED]",
     environment: "Production",
     permissions: "Read/Write",
     createdBy: "S. Nakamoto",
@@ -174,5 +174,5 @@ export const TOKENIZATION_REQUEST_SAMPLE = `{
 }`;
 
 export const TOKENIZATION_CURL_SNIPPET = `curl -X POST https://api.sora.com/v1/tokenization/issue \\
-  -H "Authorization: Bearer sk_live_..." \\
+  -H "Authorization: Bearer [API KEY]" \\
   -d '{"asset_id": "AST-9921"}'`;
