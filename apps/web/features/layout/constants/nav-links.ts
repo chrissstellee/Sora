@@ -2,7 +2,7 @@ import {
   Box,
   FilePlus2,
   FileText,
-  History,
+  // History,
   KeyRound,
   LayoutDashboard,
   Users,
@@ -39,7 +39,7 @@ export const NAV_SECTIONS: NavSection[] = [
     label: "Registry",
     links: [
       { label: "Ownership Registry", href: "/ownership-registry", icon: Users },
-      { label: "Activity Log", href: "/activity-log", icon: History },
+      // { label: "Activity Log", href: "/activity-log", icon: History },
     ],
   },
   {
