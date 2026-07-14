@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { apiError } from "@/core/lib/api-errors";
+import { apiError, normalizePaginationError } from "@/core/lib/api-errors";
 import { convexClient, getConvexBoundaryKey } from "@/core/lib/convex-client";
 import { correlationId, requireSessionTokenHash } from "@/core/lib/server-session";
 import { api } from "@repo/backend/api";
@@ -33,13 +33,18 @@ export async function GET(request: Request) {
     const rawLimit = params.get("limit");
     const limit = rawLimit === null ? 25 : Number(rawLimit);
     if (!Number.isInteger(limit) || limit < 1 || limit > 100) throw new Error("INVALID_LIMIT");
-    const result = await convexClient.query(api.assets.list, {
-      boundaryKey: getConvexBoundaryKey(),
-      sessionTokenHash: await requireSessionTokenHash(),
-      cursor: params.get("cursor") || undefined,
-      limit,
-      search: params.get("q") || undefined,
-    });
+    const cursor = params.get("cursor");
+    let result;
+    try {
+      result = await convexClient.query(api.assets.list, {
+        boundaryKey: getConvexBoundaryKey(),
+        sessionTokenHash: await requireSessionTokenHash(),
+        paginationOpts: { cursor, numItems: limit },
+        search: params.get("q") || undefined,
+      });
+    } catch (error) {
+      throw normalizePaginationError(error, cursor);
+    }
     return NextResponse.json(result);
   } catch (error) {
     return apiError(error, requestCorrelationId);

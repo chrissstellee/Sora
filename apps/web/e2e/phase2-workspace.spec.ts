@@ -75,17 +75,113 @@ test("authenticated asset workflow, conflict recovery, and Organization isolatio
     await page.goto(`${environment.baseURL}/dashboard`);
     await expect(page.getByRole("heading", { name: "Workspace dashboard" })).toBeVisible();
     await expect(page.getByLabel("Lifecycle summary")).toBeVisible();
+    await expect(page.getByRole("link", { name: editedName })).toBeVisible();
+
+    const summaryResponseA = await contextA.request.get(
+      `${environment.baseURL}/api/workspace/summary`,
+    );
+    expect(summaryResponseA.ok()).toBeTruthy();
+    const summaryA = await summaryResponseA.json();
+    expect(summaryA.counts.total).toBeGreaterThan(0);
+    expect(
+      summaryA.recentAssets.some((asset: { assetId: string }) => asset.assetId === assetId),
+    ).toBe(true);
+    const activityResponseA = await contextA.request.get(
+      `${environment.baseURL}/api/activity?assetId=${assetId}&limit=25`,
+    );
+    expect(activityResponseA.ok()).toBeTruthy();
+    const activityA = await activityResponseA.json();
+    expect(activityA.items.map((event: { eventType: string }) => event.eventType)).toEqual(
+      expect.arrayContaining(["asset.created", "asset.updated"]),
+    );
 
     const foreignResponse = await contextB.request.get(
       `${environment.baseURL}/api/assets/${assetId}`,
     );
     expect(foreignResponse.status()).toBe(404);
+    const foreignUpdate = await contextB.request.patch(
+      `${environment.baseURL}/api/assets/${assetId}`,
+      {
+        data: { ...toAssetInput(current), expectedVersion: current.version },
+      },
+    );
+    expect(foreignUpdate.status()).toBe(404);
+    const summaryResponseB = await contextB.request.get(
+      `${environment.baseURL}/api/workspace/summary`,
+    );
+    expect(summaryResponseB.ok()).toBeTruthy();
+    const summaryB = await summaryResponseB.json();
+    expect(
+      summaryB.recentAssets.some((asset: { assetId: string }) => asset.assetId === assetId),
+    ).toBe(false);
+    const activityResponseB = await contextB.request.get(
+      `${environment.baseURL}/api/activity?assetId=${assetId}&limit=25`,
+    );
+    expect(activityResponseB.ok()).toBeTruthy();
+    expect((await activityResponseB.json()).items).toEqual([]);
     const pageB = await contextB.newPage();
     await pageB.goto(`${environment.baseURL}/assets`);
     await pageB.getByLabel("Search assets by name or registration number").fill(unique);
     await expect(pageB.getByText("No matching assets")).toBeVisible();
   } finally {
     await Promise.all([contextA.close(), contextB.close()]);
+  }
+});
+
+test("dashboard exposes empty, failure, retry, and keyboard-focus states", async ({ browser }) => {
+  const context = await browser.newContext();
+  await context.addCookies([playwrightCookie(environment.baseURL, environment.orgA)]);
+  const page = await context.newPage();
+  const emptySummary = {
+    counts: {
+      total: 0,
+      Draft: 0,
+      Review: 0,
+      Ready: 0,
+      Issuing: 0,
+      Active: 0,
+      Failed: 0,
+      Archived: 0,
+    },
+    recentAssets: [],
+  };
+
+  try {
+    await page.route("**/api/workspace/summary", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(emptySummary),
+      }),
+    );
+    await page.route("**/api/activity?**", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: '{"items":[]}' }),
+    );
+    await page.goto(`${environment.baseURL}/dashboard`);
+    await expect(page.getByText("No assets have been created yet.")).toBeVisible();
+    await expect(page.getByText("No recent workspace activity.")).toBeVisible();
+
+    await page.unroute("**/api/workspace/summary");
+    await page.route("**/api/workspace/summary", (route) =>
+      route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({
+          error: {
+            code: "SERVICE_UNAVAILABLE",
+            message: "Temporary acceptance-test failure",
+            correlationId: "phase2-e2e-failure",
+          },
+        }),
+      }),
+    );
+    await page.reload();
+    const retry = page.getByRole("button", { name: "Retry" });
+    await expect(page.getByRole("alert")).toContainText("Temporary acceptance-test failure");
+    await retry.focus();
+    await expect(retry).toBeFocused();
+  } finally {
+    await context.close();
   }
 });
 

@@ -9,9 +9,11 @@
  */
 
 import type * as activity from "../activity.js";
+import type * as assetAggregates from "../assetAggregates.js";
 import type * as assets from "../assets.js";
 import type * as auth from "../auth.js";
 import type * as helpers from "../helpers.js";
+import type * as phase2Faults from "../phase2Faults.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -22,9 +24,11 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
+  assetAggregates: typeof assetAggregates;
   assets: typeof assets;
   auth: typeof auth;
   helpers: typeof helpers;
+  phase2Faults: typeof phase2Faults;
   tasks: typeof tasks;
 }>;
 
@@ -54,4 +58,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  assetLifecycleCounts: import("@convex-dev/aggregate/_generated/component.js").ComponentApi<"assetLifecycleCounts">;
+};

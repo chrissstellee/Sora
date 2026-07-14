@@ -7,11 +7,13 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "check:phase2-bounds": "node scripts/check-phase2-bounds.mjs",
     "check:phase2-mocks": "node scripts/check-phase2-mocks.mjs",
     "dev": "turbo run dev",
     "format:check": "oxfmt --check .",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "phase2:backfill": "pnpm --filter @repo/backend phase2:backfill",
     "phase2:browser:install": "pnpm --filter web phase2:browser:install",
     "phase2:e2e": "pnpm --filter web phase2:e2e",
     "phase2:perf": "pnpm --filter web phase2:perf",
@@ -20,8 +22,8 @@
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm check:phase2-mocks && pnpm build && pnpm scan:secrets",
-    "verify:phase2": "pnpm verify && pnpm phase2:seed && pnpm phase2:perf && pnpm phase2:e2e"
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm check:phase2-bounds && pnpm check:phase2-mocks && pnpm build && pnpm scan:secrets",
+    "verify:phase2": "pnpm verify && pnpm phase2:backfill && pnpm phase2:seed && pnpm phase2:perf && pnpm phase2:e2e"
   },
   "devDependencies": {
     "husky": "^9.1.7",

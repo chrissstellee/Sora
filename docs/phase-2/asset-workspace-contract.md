@@ -22,7 +22,7 @@ See [ADR 0004](../adr/0004-authenticated-next-convex-boundary.md) for the comple
 | `countryCode`        | ISO-3166 alpha-2, uppercased                                                                        |
 | `legalOwner`         | Required, 2–200 characters                                                                          |
 | `registrationNumber` | Required, 3–64 characters; stored display value is uppercased; match key removes spaces and hyphens |
-| `ownershipType`      | `Individual`, `Company`, `Trust`, or `Government`                                                   |
+| `ownershipType`      | `Individual`, `Organization`, `Trust`, or `Joint Venture`                                           |
 | `contactEmail`       | Required email, at most 254 characters, lowercased                                                  |
 | `address`            | Optional, at most 500 characters                                                                    |
 | `contactPhone`       | Optional, at most 32 characters and limited to phone punctuation/digits                             |
@@ -65,10 +65,10 @@ Create and its `asset.created` event, and material update and its `asset.updated
 
 ## Read semantics
 
-- Default list order: `updatedAt DESC`, then `assetId ASC`; cursor-paginated, default 25 and maximum 100.
+- Default list order: `updatedAt DESC`, then `assetId DESC`; opaque cursor-paginated, default 25 and maximum 100.
 - Search: server-normalized case-insensitive name prefix plus registration exact/prefix, deduplicated, at most 50, ordered by normalized name then `assetId`. Empty input restores the default list.
 - Dashboard: indexed counts for every lifecycle and total including Archived; recent assets follow the default stable order.
-- Activity: Organization- or asset-scoped, ordered by timestamp with stable event ID tie-breaking.
+- Activity: Organization- or asset-scoped, ordered by `timestamp DESC`, then `eventId DESC`, directly from the matching index before the limit is applied.
 
 ## HTTP surface
 

@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
 import {
@@ -9,7 +10,8 @@ import {
   type CanonicalAssetRecordInput,
 } from "../src/domain/asset-record.js";
 import { mutation, query } from "./_generated/server.js";
-import { enforceAuth } from "./helpers.js";
+import { assetLifecycleCounts } from "./assetAggregates.js";
+import { enforceAuth, enforceBoundary } from "./helpers.js";
 
 import type { DataModel, Id } from "./_generated/dataModel.js";
 import type { GenericMutationCtx, GenericQueryCtx } from "convex/server";
@@ -117,7 +119,9 @@ export const create = mutation({
       assetId,
       metadata: activityMetadata({ status: "Draft" }),
     });
-    return { asset: toPublicAsset((await ctx.db.get(id))!), replayed: false };
+    const asset = (await ctx.db.get(id))!;
+    await assetLifecycleCounts.insertIfDoesNotExist(ctx, asset);
+    return { asset: toPublicAsset(asset), replayed: false };
   },
 });
 
@@ -193,13 +197,20 @@ export const list = query({
   args: {
     boundaryKey: v.string(),
     sessionTokenHash: v.string(),
-    cursor: v.optional(v.string()),
-    limit: v.number(),
+    paginationOpts: paginationOptsValidator,
     search: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const session = await enforceAuth(ctx, args.sessionTokenHash, args.boundaryKey);
-    const limit = Math.max(1, Math.min(args.search ? 50 : 100, Math.trunc(args.limit)));
+    const maximumLimit = args.search ? 50 : 100;
+    if (
+      !Number.isInteger(args.paginationOpts.numItems) ||
+      args.paginationOpts.numItems < 1 ||
+      args.paginationOpts.numItems > maximumLimit
+    ) {
+      throw new Error("INVALID_LIMIT");
+    }
+    const limit = args.paginationOpts.numItems;
     const search = args.search?.normalize("NFKC").trim();
     if (search) {
       const namePrefix = normalizeAssetName(search);
@@ -236,25 +247,16 @@ export const list = query({
         .map((asset) => toPublicAsset(asset));
       return { items, nextCursor: null, mode: "search" as const };
     }
-    const assets = await ctx.db
+    const result = await ctx.db
       .query("assets")
       .withIndex("by_organizationId_updatedAt", (q) =>
         q.eq("organizationId", session.organizationId),
       )
-      .collect();
-    const ordered = assets.sort(
-      (a, b) => b.updatedAt - a.updatedAt || a.assetId.localeCompare(b.assetId),
-    );
-    const cursorIndex = args.cursor
-      ? ordered.findIndex((item) => item.assetId === args.cursor)
-      : -1;
-    if (args.cursor && cursorIndex < 0) throw new Error("INVALID_CURSOR");
-    const start = cursorIndex + 1;
-    const page = ordered.slice(start, start + limit);
-    const hasMore = start + limit < ordered.length;
+      .order("desc")
+      .paginate(args.paginationOpts);
     return {
-      items: page.map((asset) => toPublicAsset(asset)),
-      nextCursor: hasMore ? (page[page.length - 1]?.assetId ?? null) : null,
+      items: result.page.map((asset) => toPublicAsset(asset)),
+      nextCursor: result.isDone ? null : result.continueCursor,
       mode: "list" as const,
     };
   },
@@ -270,25 +272,49 @@ export const workspaceSummary = query({
         q.eq("organizationId", session.organizationId),
       )
       .order("desc")
-      .take(10);
-    const lifecycleRows = await Promise.all(
+      .take(5);
+    const lifecycleCounts = await Promise.all(
       ASSET_LIFECYCLE_OPTIONS.map((status) =>
-        ctx.db
-          .query("assets")
-          .withIndex("by_organizationId_lifecycle", (q) =>
-            q.eq("organizationId", session.organizationId).eq("lifecycle", status),
-          )
-          .collect(),
+        assetLifecycleCounts.count(ctx, {
+          namespace: session.organizationId,
+          bounds: {
+            lower: { key: status, inclusive: true },
+            upper: { key: status, inclusive: true },
+          },
+        }),
       ),
     );
     const counts = Object.fromEntries(
-      ASSET_LIFECYCLE_OPTIONS.map((status, index) => [status, lifecycleRows[index]!.length]),
+      ASSET_LIFECYCLE_OPTIONS.map((status, index) => [status, lifecycleCounts[index]!]),
     ) as Record<string, number>;
-    const total = lifecycleRows.reduce((sum, rows) => sum + rows.length, 0);
-    const recentAssets = recent
-      .sort((a, b) => b.updatedAt - a.updatedAt || a.assetId.localeCompare(b.assetId))
-      .slice(0, 5)
-      .map((asset) => toPublicAsset(asset));
+    const total = await assetLifecycleCounts.count(ctx, { namespace: session.organizationId });
+    const recentAssets = recent.map((asset) => toPublicAsset(asset));
     return { counts: { ...counts, total }, recentAssets };
+  },
+});
+
+export const backfillLifecycleCounts = mutation({
+  args: {
+    boundaryKey: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => {
+    enforceBoundary(args.boundaryKey);
+    if (
+      !Number.isInteger(args.paginationOpts.numItems) ||
+      args.paginationOpts.numItems < 1 ||
+      args.paginationOpts.numItems > 50
+    ) {
+      throw new Error("INVALID_LIMIT");
+    }
+    const result = await ctx.db.query("assets").paginate(args.paginationOpts);
+    for (const asset of result.page) {
+      await assetLifecycleCounts.insertIfDoesNotExist(ctx, asset);
+    }
+    return {
+      continueCursor: result.continueCursor,
+      isDone: result.isDone,
+      processed: result.page.length,
+    };
   },
 });

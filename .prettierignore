@@ -1,6 +1,7 @@
 .agents/
 .codex/
 packages/backend/convex/_generated/
+packages/backend/.claude/skills/
 node_modules/
 .next/
 .turbo/

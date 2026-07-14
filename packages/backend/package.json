@@ -16,11 +16,13 @@
     "dev": "convex dev",
     "lint": "oxlint convex src",
     "lint:fix": "oxlint --fix convex src && oxfmt --write src convex/schema.ts convex/tasks.ts convex/README.md convex/tsconfig.json",
+    "phase2:backfill": "tsx --env-file=.env.local src/scripts/phase2-backfill.ts",
     "spike:testnet": "tsx src/stellar/spike.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@convex-dev/aggregate": "^0.2.2",
     "@stellar/stellar-sdk": "16.0.1",
     "convex": "^1.31.7",
     "zod": "^4.3.6"
@@ -31,6 +33,7 @@
     "convex-test": "^0.0.54",
     "tsx": "^4.20.6",
     "typescript": "5.9.2",
+    "vite": "^8.1.4",
     "vitest": "4.1.10"
   }
 }

@@ -18,24 +18,23 @@ export const list = query({
           .withIndex("by_organizationId_assetId_timestamp", (q) =>
             q.eq("organizationId", session.organizationId).eq("assetId", args.assetId),
           )
-          .collect()
+          .order("desc")
+          .take(Math.max(1, Math.min(100, Math.trunc(args.limit))))
       : await ctx.db
           .query("activityEvents")
           .withIndex("by_organizationId_timestamp", (q) =>
             q.eq("organizationId", session.organizationId),
           )
-          .collect();
-    return events
-      .sort((a, b) => b.timestamp - a.timestamp || (a.eventId ?? "").localeCompare(b.eventId ?? ""))
-      .slice(0, Math.max(1, Math.min(100, Math.trunc(args.limit))))
-      .map(
-        ({
-          _id,
-          _creationTime: _internalCreationTime,
-          organizationId: _organizationId,
-          userId: _userId,
-          ...event
-        }) => ({ id: _id, ...event }),
-      );
+          .order("desc")
+          .take(Math.max(1, Math.min(100, Math.trunc(args.limit))));
+    return events.map(
+      ({
+        _id,
+        _creationTime: _internalCreationTime,
+        organizationId: _organizationId,
+        userId: _userId,
+        ...event
+      }) => ({ id: _id, ...event }),
+    );
   },
 });

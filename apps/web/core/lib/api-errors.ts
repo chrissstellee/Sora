@@ -38,6 +38,17 @@ export function apiError(error: unknown, correlationId: string) {
   );
 }
 
+export function normalizePaginationError(error: unknown, cursor: string | null): unknown {
+  if (
+    cursor !== null &&
+    error instanceof Error &&
+    /\b(?:pagination\s+)?cursor\b/i.test(error.message)
+  ) {
+    return new Error("INVALID_CURSOR");
+  }
+  return error;
+}
+
 function errorMessage(code: string): string {
   if (code === "AUTH_REQUIRED") return "Authentication is required.";
   if (code === "ASSET_NOT_FOUND") return "Asset not found.";
