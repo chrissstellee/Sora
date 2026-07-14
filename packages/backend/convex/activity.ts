@@ -30,12 +30,12 @@ export const list = query({
       .slice(0, Math.max(1, Math.min(100, Math.trunc(args.limit))))
       .map(
         ({
-          _id: _internalId,
+          _id,
           _creationTime: _internalCreationTime,
           organizationId: _organizationId,
           userId: _userId,
           ...event
-        }) => event,
+        }) => ({ id: _id, ...event }),
       );
   },
 });

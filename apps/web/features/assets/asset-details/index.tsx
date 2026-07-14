@@ -121,7 +121,7 @@ export function ActivityList({ items }: { items: import("../lib/workspace-api").
   return (
     <ol className="divide-y">
       {items.map((event) => (
-        <li key={event.eventId} className="flex items-start justify-between gap-4 py-4">
+        <li key={event.id} className="flex items-start justify-between gap-4 py-4">
           <div>
             <p className="font-medium">{event.eventType.replaceAll(".", " ")}</p>
             {event.metadata?.changedFields?.length ? (

@@ -7,6 +7,7 @@ import type {
 export type { AssetLifecycle, AssetRecord, AssetRecordInput };
 
 export interface ActivityEvent {
+  id: string;
   eventId: string;
   eventType: string;
   assetId?: string;
