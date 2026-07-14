@@ -4,42 +4,36 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { getServerKeypair, getHomeDomain, getWebAuthDomain } from "@/core/config/server-env";
-import { convexClient } from "@/core/lib/convex-client";
+import { convexClient, getConvexBoundaryKey } from "@/core/lib/convex-client";
+import {
+  generateOpaqueToken,
+  hashToken,
+  ONBOARDING_COOKIE_NAME,
+  SESSION_COOKIE_NAME,
+  SESSION_TTL_MS,
+} from "@/core/lib/server-session";
 import { api } from "@repo/backend/api";
 import { verifySEP10Challenge, verifyChallengeMatch } from "@repo/backend/stellar/auth";
 
-const SESSION_COOKIE_NAME = "sora_session";
-const ONBOARDING_COOKIE_NAME = "sora_onboarding";
-const SESSION_TTL = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
-const ONBOARDING_TTL = 15 * 60; // 15 minutes in seconds
-
-function generateOpaqueToken(prefix: string): string {
-  return `${prefix}_${crypto.randomBytes(32).toString("hex")}`;
-}
-
-function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
+const ONBOARDING_TTL_SECONDS = 15 * 60;
 
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const { address, challengeXdr } = body;
-
-    if (!address || !challengeXdr) {
+    if (typeof address !== "string" || typeof challengeXdr !== "string") {
       return NextResponse.json(
         { error: "Missing required verification arguments" },
         { status: 400 },
       );
     }
-
+    const boundaryKey = getConvexBoundaryKey();
     const challenge = await convexClient.query(api.auth.getChallenge, {
+      boundaryKey,
       walletAddress: address,
     });
-
     const networkPassphrase =
       process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE || "Test SDF Network ; September 2015";
-
     if (
       !challenge ||
       !verifyChallengeMatch(challengeXdr, challenge.challengeXdr, networkPassphrase)
@@ -49,89 +43,48 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-
-    await convexClient.mutation(api.auth.consumeChallenge, {
-      id: challenge._id,
-    });
-
-    const serverKeypair = getServerKeypair();
-    const homeDomain = getHomeDomain(request);
-    const webAuthDomain = getWebAuthDomain(request);
-
     try {
       verifySEP10Challenge(
         challengeXdr,
-        serverKeypair.publicKey(),
+        getServerKeypair().publicKey(),
         address,
-        homeDomain,
-        webAuthDomain,
+        getHomeDomain(request),
+        getWebAuthDomain(request),
         networkPassphrase,
       );
-    } catch (verifError) {
-      console.error("SEP-10 challenge verification failed:", verifError);
+    } catch {
       return NextResponse.json({ error: "Signature verification failed" }, { status: 401 });
     }
-
-    const user = await convexClient.query(api.auth.getUserByWallet, {
+    const rawSessionToken = generateOpaqueToken("sora");
+    const rawGrant = generateOpaqueToken("grant");
+    const result = await convexClient.mutation(api.auth.completeAuthentication, {
+      boundaryKey,
+      challengeId: challenge._id,
       walletAddress: address,
+      sessionTokenHash: hashToken(rawSessionToken),
+      sessionExpiresAt: Date.now() + SESSION_TTL_MS,
+      onboardingGrantHash: hashToken(rawGrant),
+      correlationId: crypto.randomUUID(),
     });
-
-    if (user) {
-      const rawToken = generateOpaqueToken("sora");
-      const tokenHash = hashToken(rawToken);
-      const expiresAt = Date.now() + SESSION_TTL;
-
-      await convexClient.mutation(api.auth.createSession, {
-        tokenHash,
-        userId: user._id,
-        organizationId: user.organizationId,
-        expiresAt,
+    const cookieStore = await cookies();
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      path: "/",
+    };
+    if (result.status === "authenticated") {
+      cookieStore.set(SESSION_COOKIE_NAME, rawSessionToken, {
+        ...cookieOptions,
+        maxAge: SESSION_TTL_MS / 1000,
       });
-
-      await convexClient.mutation(api.auth.logActivity, {
-        organizationId: user.organizationId,
-        userId: user._id,
-        eventType: "wallet_login",
-        outcome: "success",
-        correlationId: crypto.randomUUID(),
-        metadata: JSON.stringify({ walletAddress: address, type: "returning" }),
-      });
-
-      const isProduction = process.env.NODE_ENV === "production";
-      const cookieStore = await cookies();
-      cookieStore.set(SESSION_COOKIE_NAME, rawToken, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: "lax",
-        path: "/",
-        maxAge: SESSION_TTL / 1000,
-      });
-
       return NextResponse.json({ status: "authenticated", address });
-    } else {
-      const rawGrant = generateOpaqueToken("grant");
-      const grantHash = hashToken(rawGrant);
-
-      await convexClient.mutation(api.auth.createOnboardingGrant, {
-        tokenHash: grantHash,
-        walletAddress: address,
-      });
-
-      const isProduction = process.env.NODE_ENV === "production";
-      const cookieStore = await cookies();
-      cookieStore.set(ONBOARDING_COOKIE_NAME, rawGrant, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: "lax",
-        path: "/",
-        maxAge: ONBOARDING_TTL,
-      });
-
-      return NextResponse.json({
-        status: "onboarding-required",
-        address,
-      });
     }
+    cookieStore.set(ONBOARDING_COOKIE_NAME, rawGrant, {
+      ...cookieOptions,
+      maxAge: ONBOARDING_TTL_SECONDS,
+    });
+    return NextResponse.json({ status: "onboarding-required", address });
   } catch (error) {
     console.error("Verification endpoint error:", error);
     return NextResponse.json(

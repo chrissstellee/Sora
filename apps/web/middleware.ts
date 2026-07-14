@@ -32,14 +32,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Allow auth pages (/login, /register) to redirect to dashboard if session already exists
-  if (pathname === "/login" || pathname === "/register" || pathname === "/") {
-    const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
-    if (sessionCookie && sessionCookie.value) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-  }
-
   return NextResponse.next();
 }
 

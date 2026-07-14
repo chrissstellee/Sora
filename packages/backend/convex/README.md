@@ -1,88 +1,32 @@
-# Welcome to your Convex functions directory!
+# Sora Convex backend
 
-Write your Convex functions here.
-See https://docs.convex.dev/functions for more.
+This directory contains Sora's Organization-scoped authentication, Asset Record, Activity Event, and retained task functions.
 
-A query function that takes two arguments looks like:
+## Authorization rule
 
-```ts
-// convex/myFunctions.ts
-import { query } from "./_generated/server";
-import { v } from "convex/values";
+Public functions intended for Next.js validate `CONVEX_SERVER_BOUNDARY_KEY`. Private data functions then call `enforceAuth` with the SHA-256 session-token hash. That helper returns the trusted user, wallet, and Organization context and rejects expired, revoked, deleted, disabled, or inconsistent identity state. Never authorize from caller-supplied Organization, user, or wallet identifiers.
 
-export const myQueryFunction = query({
-  // Validators for arguments.
-  args: {
-    first: v.number(),
-    second: v.string(),
-  },
+New tenant-owned indexes must begin with `organizationId`. Foreign and nonexistent record identifiers must produce the same non-disclosing result.
 
-  // Function implementation.
-  handler: async (ctx, args) => {
-    // Read the database as many times as you need here.
-    // See https://docs.convex.dev/database/reading-data.
-    const documents = await ctx.db.query("tablename").collect();
+## Asset operations
 
-    // Arguments passed from the client are properties of the args object.
-    console.log(args.first, args.second);
+- `assets.create`: canonical validation, per-Organization registration uniqueness, idempotent request UUIDs, and atomic `asset.created` events.
+- `assets.get`: Organization-scoped detail lookup.
+- `assets.update`: Draft-only optimistic concurrency, normalized no-op handling, and atomic allowlisted `asset.updated` events.
+- `assets.list`: stable cursor list and indexed name/registration prefix search.
+- `assets.workspaceSummary`: lifecycle counts and recent assets derived from persisted records.
+- `activity.list`: Organization- or asset-scoped recent activity.
 
-    // Write arbitrary JavaScript here: filter, aggregate, build derived data,
-    // remove non-public properties, or create new objects.
-    return documents;
-  },
-});
+The shared business schema is `packages/backend/src/domain/asset-record.ts`. Convex validators validate transport shape; they do not replace the domain contract.
+
+## Verify
+
+From the repository root:
+
+```powershell
+pnpm.cmd --filter @repo/backend typecheck
+pnpm.cmd --filter @repo/backend test
+pnpm.cmd verify
 ```
 
-Using this query function in a React component looks like:
-
-```ts
-const data = useQuery(api.myFunctions.myQueryFunction, {
-  first: 10,
-  second: "hello",
-});
-```
-
-A mutation function looks like:
-
-```ts
-// convex/myFunctions.ts
-import { mutation } from "./_generated/server";
-import { v } from "convex/values";
-
-export const myMutationFunction = mutation({
-  // Validators for arguments.
-  args: {
-    first: v.string(),
-    second: v.string(),
-  },
-
-  // Function implementation.
-  handler: async (ctx, args) => {
-    // Insert or modify documents in the database here.
-    // Mutations can also read from the database like queries.
-    // See https://docs.convex.dev/database/writing-data.
-    const message = { body: args.first, author: args.second };
-    const id = await ctx.db.insert("messages", message);
-
-    // Optionally, return a value from your mutation.
-    return await ctx.db.get("messages", id);
-  },
-});
-```
-
-Using this mutation function in a React component looks like:
-
-```ts
-const mutation = useMutation(api.myFunctions.myMutationFunction);
-function handleButtonPress() {
-  // fire and forget, the most common way to use mutations
-  mutation({ first: "Hello!", second: "me" });
-  // OR
-  // use the result once the mutation has completed
-  mutation({ first: "Hello!", second: "me" }).then((result) => console.log(result));
-}
-```
-
-Use the Convex CLI to push your functions to a deployment. See everything
-the Convex CLI can do by running `npx convex -h` in your project root
-directory. To learn more, launch the docs with `npx convex docs`.
+See [ADR 0004](../../../docs/adr/0004-authenticated-next-convex-boundary.md), the [Asset Workspace contract](../../../docs/phase-2/asset-workspace-contract.md), and the [evidence matrix](../../../docs/phase-2/evidence-matrix.md).

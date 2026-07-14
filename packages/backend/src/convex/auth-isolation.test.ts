@@ -1,5 +1,5 @@
 import { GenericQueryCtx } from "convex/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import { DataModel } from "../../convex/_generated/dataModel.js";
 import { list, toggle, remove } from "../../convex/tasks.js";
@@ -116,13 +116,19 @@ function createMockCtx(db: MockDatabase) {
 }
 
 describe("Convex Tenancy Isolation & Threat Matrix", () => {
+  beforeAll(() => {
+    process.env.CONVEX_SERVER_BOUNDARY_KEY = "test-boundary";
+  });
   it("enforces that a valid, active session is required for tasks list", async () => {
     const db = new MockDatabase();
     const ctx = createMockCtx(db);
 
     // No session in DB -> Should reject
     await expect(
-      (list as unknown as ConvexHandler)._handler(ctx, { sessionTokenHash: "invalid_hash" }),
+      (list as unknown as ConvexHandler)._handler(ctx, {
+        boundaryKey: "test-boundary",
+        sessionTokenHash: "invalid_hash",
+      }),
     ).rejects.toThrow(/Unauthorized/);
   });
 
@@ -148,7 +154,10 @@ describe("Convex Tenancy Isolation & Threat Matrix", () => {
 
     // Attempt list -> Should reject
     await expect(
-      (list as unknown as ConvexHandler)._handler(ctx, { sessionTokenHash: "expired_hash" }),
+      (list as unknown as ConvexHandler)._handler(ctx, {
+        boundaryKey: "test-boundary",
+        sessionTokenHash: "expired_hash",
+      }),
     ).rejects.toThrow(/Session expired/);
   });
 
@@ -215,6 +224,7 @@ describe("Convex Tenancy Isolation & Threat Matrix", () => {
     });
 
     const tasksA = (await (list as unknown as ConvexHandler)._handler(ctx, {
+      boundaryKey: "test-boundary",
       sessionTokenHash: "token_a",
     })) as Record<string, unknown>[];
     expect(tasksA.length).toBe(1);
@@ -234,6 +244,7 @@ describe("Convex Tenancy Isolation & Threat Matrix", () => {
     });
 
     const tasksB = (await (list as unknown as ConvexHandler)._handler(ctx, {
+      boundaryKey: "test-boundary",
       sessionTokenHash: "token_b",
     })) as Record<string, unknown>[];
     expect(tasksB.length).toBe(1);
@@ -276,6 +287,7 @@ describe("Convex Tenancy Isolation & Threat Matrix", () => {
     // Org A attempts to toggle Org B's task -> Should fail with "Unauthorized"
     await expect(
       (toggle as unknown as ConvexHandler)._handler(ctx, {
+        boundaryKey: "test-boundary",
         id: taskB1,
         sessionTokenHash: "token_a",
       }),
@@ -284,6 +296,7 @@ describe("Convex Tenancy Isolation & Threat Matrix", () => {
     // Org A attempts to delete Org B's task -> Should fail with "Unauthorized"
     await expect(
       (remove as unknown as ConvexHandler)._handler(ctx, {
+        boundaryKey: "test-boundary",
         id: taskB1,
         sessionTokenHash: "token_a",
       }),

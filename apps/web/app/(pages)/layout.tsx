@@ -1,9 +1,14 @@
+import { redirect } from "next/navigation";
+
+import { getServerSession } from "@/core/lib/server-session";
 import { AppSidebar, Topbar } from "@/features/layout";
 import { SidebarInset, SidebarProvider } from "@repo/ui/components/ui/sidebar";
 
 import type { ReactNode } from "react";
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  const session = await getServerSession().catch(() => null);
+  if (!session) redirect("/login");
   return (
     <SidebarProvider>
       <AppSidebar />

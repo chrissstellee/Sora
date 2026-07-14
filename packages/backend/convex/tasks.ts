@@ -4,9 +4,9 @@ import { mutation, query } from "./_generated/server.js";
 import { enforceAuth } from "./helpers.js";
 
 export const list = query({
-  args: { sessionTokenHash: v.string() },
+  args: { boundaryKey: v.string(), sessionTokenHash: v.string() },
   handler: async (ctx, args) => {
-    const session = await enforceAuth(ctx, args.sessionTokenHash);
+    const session = await enforceAuth(ctx, args.sessionTokenHash, args.boundaryKey);
     return await ctx.db
       .query("tasks")
       .withIndex("by_organizationId", (q) => q.eq("organizationId", session.organizationId))
@@ -15,21 +15,22 @@ export const list = query({
 });
 
 export const getByCompleted = query({
-  args: { completed: v.boolean(), sessionTokenHash: v.string() },
+  args: { boundaryKey: v.string(), completed: v.boolean(), sessionTokenHash: v.string() },
   handler: async (ctx, args) => {
-    const session = await enforceAuth(ctx, args.sessionTokenHash);
+    const session = await enforceAuth(ctx, args.sessionTokenHash, args.boundaryKey);
     return await ctx.db
       .query("tasks")
-      .withIndex("by_completed", (q) => q.eq("completed", args.completed))
-      .filter((q) => q.eq(q.field("organizationId"), session.organizationId))
+      .withIndex("by_organizationId_completed", (q) =>
+        q.eq("organizationId", session.organizationId).eq("completed", args.completed),
+      )
       .collect();
   },
 });
 
 export const create = mutation({
-  args: { todo: v.string(), sessionTokenHash: v.string() },
+  args: { boundaryKey: v.string(), todo: v.string(), sessionTokenHash: v.string() },
   handler: async (ctx, args) => {
-    const session = await enforceAuth(ctx, args.sessionTokenHash);
+    const session = await enforceAuth(ctx, args.sessionTokenHash, args.boundaryKey);
     const now = Date.now();
     return await ctx.db.insert("tasks", {
       organizationId: session.organizationId,
@@ -42,9 +43,9 @@ export const create = mutation({
 });
 
 export const toggle = mutation({
-  args: { id: v.id("tasks"), sessionTokenHash: v.string() },
+  args: { boundaryKey: v.string(), id: v.id("tasks"), sessionTokenHash: v.string() },
   handler: async (ctx, args) => {
-    const session = await enforceAuth(ctx, args.sessionTokenHash);
+    const session = await enforceAuth(ctx, args.sessionTokenHash, args.boundaryKey);
     const task = await ctx.db.get(args.id);
     if (!task) throw new Error("Task not found");
     if (task.organizationId !== session.organizationId) {
@@ -59,9 +60,9 @@ export const toggle = mutation({
 });
 
 export const remove = mutation({
-  args: { id: v.id("tasks"), sessionTokenHash: v.string() },
+  args: { boundaryKey: v.string(), id: v.id("tasks"), sessionTokenHash: v.string() },
   handler: async (ctx, args) => {
-    const session = await enforceAuth(ctx, args.sessionTokenHash);
+    const session = await enforceAuth(ctx, args.sessionTokenHash, args.boundaryKey);
     const task = await ctx.db.get(args.id);
     if (!task) throw new Error("Task not found");
     if (task.organizationId !== session.organizationId) {

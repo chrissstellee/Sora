@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getServerKeypair, getHomeDomain, getWebAuthDomain } from "@/core/config/server-env";
-import { convexClient } from "@/core/lib/convex-client";
+import { convexClient, getConvexBoundaryKey } from "@/core/lib/convex-client";
 import { api } from "@repo/backend/api";
 import { generateSEP10Challenge } from "@repo/backend/stellar/auth";
 
@@ -33,6 +33,7 @@ export async function GET(request: Request) {
     );
 
     await convexClient.mutation(api.auth.createChallenge, {
+      boundaryKey: getConvexBoundaryKey(),
       walletAddress: address,
       challengeXdr,
     });

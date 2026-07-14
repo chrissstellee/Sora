@@ -8,6 +8,10 @@
     "dev": "next dev --port 3000",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix . && oxfmt --write . && next typegen && tsc --noEmit",
+    "phase2:browser:install": "playwright install chromium",
+    "phase2:e2e": "playwright test",
+    "phase2:perf": "node scripts/phase2/performance.mjs",
+    "phase2:seed": "node scripts/phase2/seed.mjs",
     "start": "next start",
     "test": "vitest run",
     "typecheck": "next typegen && tsc --noEmit"
@@ -36,6 +40,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@repo/typescript-config": "workspace:*",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",

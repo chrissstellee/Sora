@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { convexClient } from "@/core/lib/convex-client";
+import { convexClient, getConvexBoundaryKey } from "@/core/lib/convex-client";
 import { api } from "@repo/backend/api";
 
 const SESSION_COOKIE_NAME = "sora_session";
@@ -27,6 +27,7 @@ export async function GET() {
 
     const tokenHash = hashToken(cookie.value);
     const session = await convexClient.query(api.auth.verifySession, {
+      boundaryKey: getConvexBoundaryKey(),
       tokenHash,
     });
 

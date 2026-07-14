@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { convexClient } from "@/core/lib/convex-client";
+import { convexClient, getConvexBoundaryKey } from "@/core/lib/convex-client";
 import { api } from "@repo/backend/api";
 
 const SESSION_COOKIE_NAME = "sora_session";
@@ -40,11 +40,13 @@ export async function POST(request: Request) {
     let onboardResult;
     try {
       onboardResult = await convexClient.mutation(api.auth.onboard, {
+        boundaryKey: getConvexBoundaryKey(),
         grantTokenHash,
         orgName,
         email: email || undefined,
         sessionTokenHash,
         sessionExpiresAt,
+        correlationId: crypto.randomUUID(),
       });
     } catch (convexError) {
       console.error("Convex onboarding failed:", convexError);
@@ -53,19 +55,6 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-
-    await convexClient.mutation(api.auth.logActivity, {
-      organizationId: onboardResult.organizationId,
-      userId: onboardResult.userId,
-      eventType: "wallet_onboard",
-      outcome: "success",
-      correlationId: crypto.randomUUID(),
-      metadata: JSON.stringify({
-        walletAddress: onboardResult.walletAddress,
-        orgName: onboardResult.orgName,
-        email,
-      }),
-    });
 
     const isProduction = process.env.NODE_ENV === "production";
     cookieStore.set(SESSION_COOKIE_NAME, rawSessionToken, {

@@ -9,7 +9,9 @@ import { DataModel } from "./_generated/dataModel.js";
 export async function enforceAuth(
   ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
   tokenHash: string,
+  boundaryKey: string,
 ) {
+  enforceBoundary(boundaryKey);
   const session = await ctx.db
     .query("sessions")
     .withIndex("by_tokenHash", (q) => q.eq("tokenHash", tokenHash))
@@ -19,7 +21,7 @@ export async function enforceAuth(
     throw new Error("Unauthorized: Invalid session");
   }
 
-  if (session.expiresAt < Date.now()) {
+  if (session.revokedAt || session.expiresAt <= Date.now()) {
     throw new Error("Unauthorized: Session expired");
   }
 
@@ -28,9 +30,21 @@ export async function enforceAuth(
     throw new Error("Unauthorized: User not found");
   }
 
+  if (user.disabledAt) {
+    throw new Error("Unauthorized: User disabled");
+  }
+
+  if (user.organizationId !== session.organizationId) {
+    throw new Error("Unauthorized: Session identity mismatch");
+  }
+
   const organization = await ctx.db.get(session.organizationId);
   if (!organization) {
     throw new Error("Unauthorized: Organization not found");
+  }
+
+  if (organization.disabledAt) {
+    throw new Error("Unauthorized: Organization disabled");
   }
 
   return {
@@ -39,4 +53,13 @@ export async function enforceAuth(
     walletAddress: user.walletAddress,
     orgName: organization.name,
   };
+}
+
+export function enforceBoundary(boundaryKey: string): void {
+  const expected = (
+    globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }
+  ).process?.env?.CONVEX_SERVER_BOUNDARY_KEY;
+  if (!expected || boundaryKey !== expected) {
+    throw new Error("Unauthorized: Invalid server boundary");
+  }
 }

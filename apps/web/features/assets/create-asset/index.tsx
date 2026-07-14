@@ -1,116 +1,60 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FormProvider } from "react-hook-form";
+import * as React from "react";
 import { toast } from "sonner";
 
-import { Stepper } from "@repo/ui/components/ui-customs/stepper";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 
-import { CreateAssetHeader } from "./components/create-asset-header";
-import { CreateAssetSummarySidebar } from "./components/create-asset-summary-sidebar";
-import { StepNavigation } from "./components/step-navigation";
-import { BasicInformationStep } from "./components/steps/basic-information-step";
-import { OwnershipDetailsStep } from "./components/steps/ownership-details-step";
-import { ReviewSubmitStep } from "./components/steps/review-submit-step";
-import { SupportingDocumentsStep } from "./components/steps/supporting-documents-step";
-import { CREATE_ASSET_STEPS } from "./constants/create-asset";
-import { useCreateAssetForm } from "./hooks/use-create-asset-form";
+import { AssetForm } from "../components/asset-form";
+import { WorkspaceApiError, createAsset } from "../lib/workspace-api";
+
+import type { AssetRecordInput } from "../lib/workspace-api";
 
 export function CreateAssetPage() {
   const router = useRouter();
-  const {
-    form,
-    currentStepIndex,
-    completionPercent,
-    formMethods,
-    goNext,
-    goBack,
-    goToStep,
-    updateBasicInformation,
-    updateOwnershipDetails,
-    addDocuments,
-    removeDocument,
-  } = useCreateAssetForm();
+  const requestId = React.useRef<string>(crypto.randomUUID());
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>();
 
-  const isLastStep = currentStepIndex === CREATE_ASSET_STEPS.length - 1;
-  const activeStep = CREATE_ASSET_STEPS[currentStepIndex]!;
-
-  const handleSubmit = async () => {
-    // Wire this up to the real create-asset mutation when the API is ready.
-    console.log("Submitting asset", form);
-
-    // Show success toast
-    toast.success("Successfully added asset", {
-      description: "The asset has been created successfully.",
-    });
-
-    // Navigate back to assets page
-    router.push("/assets");
+  const submit = async (input: AssetRecordInput) => {
+    setIsSubmitting(true);
+    setFieldErrors(undefined);
+    try {
+      const result = await createAsset(input, requestId.current);
+      toast.success(result.replayed ? "Asset request recovered" : "Asset created", {
+        description: `${result.asset.name} is saved as a Draft.`,
+      });
+      router.push(`/assets/${result.asset.assetId}`);
+    } catch (error) {
+      if (error instanceof WorkspaceApiError) setFieldErrors(error.fieldErrors);
+      toast.error(error instanceof Error ? error.message : "Asset could not be created");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <FormProvider {...formMethods}>
-      <div className="flex flex-col gap-6">
-        <CreateAssetHeader />
-
-        <Stepper
-          steps={CREATE_ASSET_STEPS.map((step) => ({ key: step.key, label: step.label }))}
-          currentIndex={currentStepIndex}
-          onStepClick={goToStep}
-        />
-
-        <div className="mt-2 flex flex-col gap-6 lg:flex-row lg:items-start">
-          <div className="flex flex-1 flex-col gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold text-secondary">
-                  Step {currentStepIndex + 1}:{" "}
-                  <span className="text-foreground">{activeStep.label}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {activeStep.key === "basic-information" && (
-                  <BasicInformationStep
-                    value={form.basicInformation}
-                    onChange={updateBasicInformation}
-                  />
-                )}
-                {activeStep.key === "ownership-details" && (
-                  <OwnershipDetailsStep
-                    value={form.ownershipDetails}
-                    onChange={updateOwnershipDetails}
-                  />
-                )}
-                {activeStep.key === "supporting-documents" && (
-                  <SupportingDocumentsStep
-                    documents={form.documents}
-                    onFilesSelected={addDocuments}
-                    onRemoveDocument={removeDocument}
-                  />
-                )}
-                {activeStep.key === "review-submit" && (
-                  <ReviewSubmitStep form={form} onEditStep={goToStep} />
-                )}
-              </CardContent>
-            </Card>
-
-            <StepNavigation
-              currentStepIndex={currentStepIndex}
-              isLastStep={isLastStep}
-              onBack={goBack}
-              onNext={goNext}
-              onSubmit={handleSubmit}
-            />
-          </div>
-
-          <CreateAssetSummarySidebar
-            form={form}
-            completionPercent={completionPercent}
-            isLastStep={isLastStep}
-          />
-        </div>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+      <div>
+        <h1 className="font-display text-3xl font-semibold">Create asset</h1>
+        <p className="mt-1 text-muted-foreground">
+          Create a persisted Draft record for your workspace.
+        </p>
       </div>
-    </FormProvider>
+      <Card>
+        <CardHeader>
+          <CardTitle>Asset record</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AssetForm
+            submitLabel="Create asset"
+            isSubmitting={isSubmitting}
+            serverFieldErrors={fieldErrors}
+            onSubmit={submit}
+          />
+        </CardContent>
+      </Card>
+    </div>
   );
 }
