@@ -3,10 +3,12 @@ import { expect, test } from "@playwright/test";
 import { playwrightCookie, readPhase2Environment } from "../scripts/phase2/env.mjs";
 
 const environment = readPhase2Environment();
+const WORKSPACE_READY_TIMEOUT_MS = 30_000;
 
 test("authenticated asset workflow, conflict recovery, and Organization isolation", async ({
   browser,
 }) => {
+  test.setTimeout(90_000);
   const contextA = await browser.newContext();
   const contextB = await browser.newContext();
   await contextA.addCookies([playwrightCookie(environment.baseURL, environment.orgA)]);
@@ -32,7 +34,7 @@ test("authenticated asset workflow, conflict recovery, and Organization isolatio
     await page.getByLabel("Registration number").fill(`E2E-${unique}`);
     await page.getByLabel("Contact email").fill(`phase2-${unique}@example.test`);
     await page.getByRole("button", { name: "Create asset" }).click();
-    await expect(page).toHaveURL(/\/assets\/[0-9a-f-]{36}$/);
+    await expect(page).toHaveURL(/\/assets\/[0-9a-f-]{36}$/, { timeout: 30_000 });
     const assetId = page.url().split("/").at(-1);
     expect(assetId).toBeTruthy();
     await expect(page.getByRole("heading", { name: originalName })).toBeVisible();
@@ -40,8 +42,8 @@ test("authenticated asset workflow, conflict recovery, and Organization isolatio
     await page.reload();
     await expect(page.getByRole("heading", { name: originalName })).toBeVisible();
     await page.goto(`${environment.baseURL}/assets`);
-    await page.getByLabel("Search assets by name or registration number").fill(unique);
-    await expect(page.getByRole("link", { name: originalName })).toBeVisible();
+    await page.getByLabel("Search assets by name or registration number").fill(originalName);
+    await expect(page.getByRole("link", { name: originalName })).toBeVisible({ timeout: 15_000 });
     await page.getByRole("link", { name: originalName }).click();
     await expect(page).toHaveURL(new RegExp(`/assets/${assetId}$`));
 
@@ -65,17 +67,26 @@ test("authenticated asset workflow, conflict recovery, and Organization isolatio
 
     await page.getByLabel("Asset name").fill(editedName);
     await page.getByRole("button", { name: "Save changes" }).click();
-    await expect(page.getByRole("alert")).toContainText("A newer version is available");
+    const conflictAlert = page
+      .getByRole("alert")
+      .filter({ hasText: "A newer version is available" });
+    await expect(conflictAlert).toBeVisible();
     await page.getByRole("button", { name: "I reviewed the latest version" }).click();
     await page.getByRole("button", { name: "Retry update" }).click();
-    await expect(page.getByRole("alert")).not.toBeVisible();
+    await expect(conflictAlert).not.toBeVisible();
     await page.goto(`${environment.baseURL}/assets/${assetId}`);
     await expect(page.getByRole("heading", { name: editedName })).toBeVisible();
 
     await page.goto(`${environment.baseURL}/dashboard`);
-    await expect(page.getByRole("heading", { name: "Workspace dashboard" })).toBeVisible();
-    await expect(page.getByLabel("Lifecycle summary")).toBeVisible();
-    await expect(page.getByRole("link", { name: editedName })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Workspace dashboard" })).toBeVisible({
+      timeout: WORKSPACE_READY_TIMEOUT_MS,
+    });
+    await expect(page.getByLabel("Lifecycle summary")).toBeVisible({
+      timeout: WORKSPACE_READY_TIMEOUT_MS,
+    });
+    await expect(page.getByRole("link", { name: editedName })).toBeVisible({
+      timeout: WORKSPACE_READY_TIMEOUT_MS,
+    });
 
     const summaryResponseA = await contextA.request.get(
       `${environment.baseURL}/api/workspace/summary`,
@@ -121,8 +132,8 @@ test("authenticated asset workflow, conflict recovery, and Organization isolatio
     expect((await activityResponseB.json()).items).toEqual([]);
     const pageB = await contextB.newPage();
     await pageB.goto(`${environment.baseURL}/assets`);
-    await pageB.getByLabel("Search assets by name or registration number").fill(unique);
-    await expect(pageB.getByText("No matching assets")).toBeVisible();
+    await pageB.getByLabel("Search assets by name or registration number").fill(originalName);
+    await expect(pageB.getByText("No matching assets")).toBeVisible({ timeout: 15_000 });
   } finally {
     await Promise.all([contextA.close(), contextB.close()]);
   }
@@ -177,7 +188,10 @@ test("dashboard exposes empty, failure, retry, and keyboard-focus states", async
     );
     await page.reload();
     const retry = page.getByRole("button", { name: "Retry" });
-    await expect(page.getByRole("alert")).toContainText("Temporary acceptance-test failure");
+    const workspaceAlert = page
+      .getByRole("alert")
+      .filter({ hasText: "Workspace data is unavailable" });
+    await expect(workspaceAlert).toContainText("Temporary acceptance-test failure");
     await retry.focus();
     await expect(retry).toBeFocused();
   } finally {

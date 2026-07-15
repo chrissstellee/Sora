@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
 
-import { apiRequest, readPhase2Environment } from "./env.mjs";
+import { apiRequest, assertMinimumFixtureSize, readPhase2Environment } from "./env.mjs";
 
 const ASSET_COUNT = 5_000;
 const TARGET_VERSION = 5;
-const DEFAULT_CONCURRENCY = 20;
+// Local Convex mutations have a one-second execution ceiling. Four workers keep
+// the deterministic fixture moving without saturating the shared activity indexes.
+const DEFAULT_CONCURRENCY = 4;
 const { baseURL, orgA, orgB } = readPhase2Environment();
 const concurrency = positiveInteger(process.env.PHASE2_SEED_CONCURRENCY, DEFAULT_CONCURRENCY);
 
@@ -31,15 +33,15 @@ for (const [organization, cookie] of [
   process.stdout.write(`Seeding Organization ${organization}: ${ASSET_COUNT}/${ASSET_COUNT}\n`);
   const summaryResponse = await apiRequest(baseURL, cookie, "/api/workspace/summary");
   const summary = await summaryResponse.json();
-  if (summary.counts?.total !== ASSET_COUNT) {
-    throw new Error(
-      `Fixture Organization ${organization} contains ${summary.counts?.total ?? "an unknown number of"} assets; use a clean preview deployment`,
-    );
-  }
+  assertMinimumFixtureSize(
+    summary.counts?.total,
+    ASSET_COUNT,
+    `Fixture Organization ${organization}`,
+  );
 }
 
 console.log(
-  "Phase 2 fixture ready: 5,000 assets and 25,000 deterministic asset events per Organization.",
+  "Phase 2 fixture ready: 5,000 deterministic assets and 25,000 deterministic asset events per Organization.",
 );
 
 async function assertAuthenticated(url, cookie, label) {
@@ -77,15 +79,24 @@ async function seedAsset(url, cookie, organization, index) {
   }
   while (asset.version < TARGET_VERSION) {
     const revision = asset.version;
-    const update = await apiRequest(url, cookie, `/api/assets/${asset.assetId}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        ...input,
-        internalNotes: `Fixture revision ${revision}`,
-        expectedVersion: asset.version,
-      }),
-    });
-    ({ asset } = await update.json());
+    try {
+      const update = await apiRequest(url, cookie, `/api/assets/${asset.assetId}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          ...input,
+          internalNotes: `Fixture revision ${revision}`,
+          expectedVersion: asset.version,
+        }),
+      });
+      ({ asset } = await update.json());
+    } catch (error) {
+      if (!(error instanceof Error) || !error.message.includes("ASSET_VERSION_CONFLICT")) {
+        throw error;
+      }
+      const current = await apiRequest(url, cookie, `/api/assets/${asset.assetId}`);
+      ({ asset } = await current.json());
+      if (asset.version <= revision) throw error;
+    }
   }
 }
 

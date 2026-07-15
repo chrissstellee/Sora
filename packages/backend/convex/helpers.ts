@@ -25,7 +25,10 @@ export async function enforceAuth(
     throw new Error("Unauthorized: Session expired");
   }
 
-  const user = await ctx.db.get(session.userId);
+  const [user, organization] = await Promise.all([
+    ctx.db.get(session.userId),
+    ctx.db.get(session.organizationId),
+  ]);
   if (!user) {
     throw new Error("Unauthorized: User not found");
   }
@@ -38,7 +41,6 @@ export async function enforceAuth(
     throw new Error("Unauthorized: Session identity mismatch");
   }
 
-  const organization = await ctx.db.get(session.organizationId);
   if (!organization) {
     throw new Error("Unauthorized: Organization not found");
   }

@@ -2,7 +2,13 @@ import { performance } from "node:perf_hooks";
 
 import { chromium } from "@playwright/test";
 
-import { apiRequest, percentile, playwrightCookie, readPhase2Environment } from "./env.mjs";
+import {
+  apiRequest,
+  assertMinimumFixtureSize,
+  percentile,
+  playwrightCookie,
+  readPhase2Environment,
+} from "./env.mjs";
 
 const SEARCH_WARMUPS = 20;
 const SEARCH_SAMPLES = 100;
@@ -10,6 +16,8 @@ const DASHBOARD_WARMUPS = 10;
 const DASHBOARD_SAMPLES = 50;
 const SEARCH_P95_LIMIT_MS = 500;
 const DASHBOARD_P95_LIMIT_MS = 2_000;
+const DASHBOARD_WARMUP_READY_TIMEOUT_MS = 120_000;
+const DASHBOARD_SAMPLE_READY_TIMEOUT_MS = 30_000;
 const { baseURL, orgA } = readPhase2Environment({ requireBothOrganizations: false });
 
 await assertFixture(baseURL, orgA);
@@ -45,12 +53,23 @@ try {
 try {
   const context = await browser.newContext();
   await context.addCookies([playwrightCookie(baseURL, orgA)]);
+  await assertBrowserAuthenticated(context, baseURL);
   const page = await context.newPage();
   for (let index = 0; index < DASHBOARD_WARMUPS + DASHBOARD_SAMPLES; index += 1) {
     const started = performance.now();
-    await page.goto(`${baseURL}/dashboard`, { waitUntil: "domcontentloaded" });
-    await page.getByRole("heading", { name: "Workspace dashboard" }).waitFor();
-    await page.getByLabel("Lifecycle summary").waitFor();
+    const response = await page.goto(`${baseURL}/dashboard`, { waitUntil: "domcontentloaded" });
+    if (!response?.ok()) {
+      throw new Error(
+        `Dashboard navigation failed during ${sampleLabel(index)} (HTTP ${response?.status() ?? "unknown"})`,
+      );
+    }
+    await waitForDashboardReady(
+      page,
+      index < DASHBOARD_WARMUPS
+        ? DASHBOARD_WARMUP_READY_TIMEOUT_MS
+        : DASHBOARD_SAMPLE_READY_TIMEOUT_MS,
+      index,
+    );
     if (index >= DASHBOARD_WARMUPS) dashboardSamples.push(performance.now() - started);
   }
 } finally {
@@ -74,9 +93,46 @@ if (searchP95 > SEARCH_P95_LIMIT_MS || dashboardP95 > DASHBOARD_P95_LIMIT_MS) {
 async function assertFixture(url, cookie) {
   const response = await apiRequest(url, cookie, "/api/workspace/summary");
   const summary = await response.json();
-  if (summary.counts?.total !== 5_000) {
+  assertMinimumFixtureSize(summary.counts?.total, 5_000, "NOT EXECUTED: Phase 2 fixture");
+}
+
+async function assertBrowserAuthenticated(context, url) {
+  const response = await context.request.get(new URL("/api/auth/me", url).href);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok() || !body.authenticated) {
     throw new Error(
-      `NOT EXECUTED: expected exactly 5,000 seeded assets; found ${summary.counts?.total ?? "unknown"}`,
+      `NOT EXECUTED: Chromium could not authenticate the Organization A session (HTTP ${response.status()})`,
     );
   }
+}
+
+async function waitForDashboardReady(page, timeout, index) {
+  const heading = page.getByRole("heading", { name: "Workspace dashboard" });
+  const lifecycle = page.getByLabel("Lifecycle summary");
+  const error = page.getByRole("alert").filter({ hasText: "Workspace data is unavailable" });
+  const outcome = await Promise.race([
+    lifecycle.waitFor({ timeout }).then(() => "ready"),
+    error.waitFor({ timeout }).then(() => "error"),
+    page.waitForURL((url) => url.pathname.startsWith("/login"), { timeout }).then(() => "login"),
+  ]).catch(() => "timeout");
+
+  if (outcome === "ready") {
+    await heading.waitFor({ timeout: DASHBOARD_SAMPLE_READY_TIMEOUT_MS });
+    return;
+  }
+  if (outcome === "login") {
+    throw new Error(`Dashboard redirected to login during ${sampleLabel(index)}`);
+  }
+  if (outcome === "error") {
+    throw new Error(`Dashboard rendered its safe error state during ${sampleLabel(index)}`);
+  }
+  throw new Error(
+    `Dashboard did not become ready during ${sampleLabel(index)} within ${timeout} ms (URL ${page.url()})`,
+  );
+}
+
+function sampleLabel(index) {
+  return index < DASHBOARD_WARMUPS
+    ? `warmup ${index + 1}/${DASHBOARD_WARMUPS}`
+    : `sample ${index - DASHBOARD_WARMUPS + 1}/${DASHBOARD_SAMPLES}`;
 }

@@ -171,25 +171,31 @@ export const update = mutation({
     if (changedFields.length === 0)
       return { asset: toPublicAsset(asset), outcome: "unchanged" as const };
     const now = Date.now();
-    await ctx.db.patch(asset._id, {
+    const updateFields = {
       ...input,
       normalizedName: normalizeAssetName(input.name),
       normalizedRegistrationNumber,
       updatedAt: now,
       version: asset.version + 1,
-    });
-    await ctx.db.insert("activityEvents", {
-      organizationId: session.organizationId,
-      userId: session.userId,
-      eventType: "asset.updated",
-      timestamp: now,
-      outcome: "success",
-      correlationId: args.correlationId,
-      eventId: args.correlationId,
-      assetId: asset.assetId,
-      metadata: activityMetadata({ changedFields }),
-    });
-    return { asset: toPublicAsset((await ctx.db.get(asset._id))!), outcome: "updated" as const };
+    };
+    await Promise.all([
+      ctx.db.patch(asset._id, updateFields),
+      ctx.db.insert("activityEvents", {
+        organizationId: session.organizationId,
+        userId: session.userId,
+        eventType: "asset.updated",
+        timestamp: now,
+        outcome: "success",
+        correlationId: args.correlationId,
+        eventId: args.correlationId,
+        assetId: asset.assetId,
+        metadata: activityMetadata({ changedFields }),
+      }),
+    ]);
+    return {
+      asset: toPublicAsset({ ...asset, ...updateFields }),
+      outcome: "updated" as const,
+    };
   },
 });
 

@@ -232,6 +232,53 @@ describe("persisted asset workspace", () => {
     expect(events.map((event) => event.eventType)).toEqual(["asset.created", "asset.updated"]);
   });
 
+  it("keeps concurrent updates and their Activity Events atomic", async () => {
+    const t = createTest();
+    const identity = await seedIdentity(t, "concurrent-updates");
+    const created = [];
+    for (let index = 0; index < 12; index += 1) {
+      const suffix = String(index).padStart(12, "0");
+      created.push(
+        await t.mutation(api.assets.create, {
+          boundaryKey: BOUNDARY,
+          sessionTokenHash: identity.tokenHash,
+          createRequestId: `60000000-0000-4000-8000-${suffix}`,
+          correlationId: `concurrent-create-${index}`,
+          input: {
+            ...input,
+            name: `Concurrent ${index}`,
+            registrationNumber: `CONCURRENT-${index}`,
+          },
+        }),
+      );
+    }
+
+    const updated = await Promise.all(
+      created.map((result, index) =>
+        t.mutation(api.assets.update, {
+          boundaryKey: BOUNDARY,
+          sessionTokenHash: identity.tokenHash,
+          assetId: result.asset.assetId as string,
+          correlationId: `concurrent-update-${index}`,
+          input: {
+            ...input,
+            name: `Concurrent updated ${index}`,
+            registrationNumber: `CONCURRENT-${index}`,
+            expectedVersion: 1,
+          },
+        }),
+      ),
+    );
+    const state = await t.run(async (ctx) => ({
+      assets: await ctx.db.query("assets").collect(),
+      events: await ctx.db.query("activityEvents").collect(),
+    }));
+
+    expect(updated.every((result) => result.asset.version === 2)).toBe(true);
+    expect(state.assets.every((asset) => asset.version === 2)).toBe(true);
+    expect(state.events.filter((event) => event.eventType === "asset.updated")).toHaveLength(12);
+  });
+
   it("keeps update, dashboard, recency, and activity results isolated by Organization", async () => {
     const t = createTest();
     const a = await seedIdentity(t, "A-matrix");
