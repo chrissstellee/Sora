@@ -1,71 +1,31 @@
-"use client";
+import Link from "next/link";
 
-import * as React from "react";
-
-import { DocumentPreviewSheet } from "./components/document-preview-sheet";
-import { DocumentsHeader } from "./components/documents-header";
-import { DocumentsStats } from "./components/documents-stats";
-import { DocumentsTable } from "./components/documents-table";
-import { DocumentsToolbar } from "./components/documents-toolbar";
-import { UploadDocumentsDialog } from "./components/upload-documents-dialog";
-import { useDocumentFilters } from "./hooks/use-document-filters";
-import { useDocumentPreview } from "./hooks/use-document-preview";
-import { useDocuments } from "./hooks/use-documents";
-import { useUploadDocumentsDialog } from "./hooks/use-upload-documents-dialog";
+import { Button } from "@repo/ui/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 
 export function DocumentsPage() {
-  const { documents, stats, isLoading } = useDocuments();
-  const { filters, setSearch, setType, setStatus, setCountry, filteredDocuments } =
-    useDocumentFilters(documents);
-  const { open, activeDocument, openPreview, onOpenChange } = useDocumentPreview();
-  const {
-    open: uploadOpen,
-    files,
-    openDialog: openUploadDialog,
-    onOpenChange: onUploadOpenChange,
-    addFiles,
-    removeFile,
-    reset: resetUpload,
-  } = useUploadDocumentsDialog();
-
-  const handleUpload = () => {
-    // TODO: wire up to the real upload endpoint once available.
-    onUploadOpenChange(false);
-    resetUpload();
-  };
-
-  const handleExport = React.useCallback(() => {
-    // TODO: Wire actual export behavior when backend support is available.
-    console.log("Export tokenization queue CSV");
-  }, []);
-
   return (
     <div className="flex flex-col gap-6">
-      <DocumentsHeader onUploadClick={openUploadDialog} />
-
-      <DocumentsStats stats={stats} />
-
-      <DocumentsToolbar
-        filters={filters}
-        onSearchChange={setSearch}
-        onTypeChange={setType}
-        onStatusChange={setStatus}
-        onCountryChange={setCountry}
-        onExport={handleExport}
-      />
-
-      <DocumentsTable documents={filteredDocuments} isLoading={isLoading} onPreview={openPreview} />
-
-      <DocumentPreviewSheet document={activeDocument} open={open} onOpenChange={onOpenChange} />
-
-      <UploadDocumentsDialog
-        open={uploadOpen}
-        onOpenChange={onUploadOpenChange}
-        files={files}
-        onFilesSelected={addFiles}
-        onRemoveFile={removeFile}
-        onUpload={handleUpload}
-      />
+      <div>
+        <h1 className="font-display text-3xl font-semibold">Supporting documents</h1>
+        <p className="mt-2 text-muted-foreground">
+          Documents are authorized and managed from their Organization-owned Asset Record.
+        </p>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Open an asset to manage evidence</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-start gap-4">
+          <p className="text-sm text-muted-foreground">
+            Upload, download, replace, and delete controls enforce the asset lifecycle and current
+            record versions.
+          </p>
+          <Button asChild>
+            <Link href="/assets">Browse assets</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

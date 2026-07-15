@@ -3,8 +3,6 @@
 import * as React from "react";
 
 import { ConfigureDigitalAssetDialog } from "./components/configure-digital-asset-dialog";
-import { RecentIssuanceActivity } from "./components/recent-issuance-activity";
-import { StellarNetworkStatus } from "./components/stellar-network-status";
 import { TokenizationHeader } from "./components/tokenization-header";
 import { TokenizationQueueTable } from "./components/tokenization-queue-table";
 import { TokenizationStats } from "./components/tokenization-stats";
@@ -14,11 +12,11 @@ import { useTokenizationFilters } from "./hooks/use-tokenization-filters";
 import { useTokenizationQueue } from "./hooks/use-tokenization-queue";
 
 export function TokenizationQueuePage() {
-  const { entries, stats, activity, networkStatus, isLoading } = useTokenizationQueue();
+  const { entries, stats, isLoading, error, refetch } = useTokenizationQueue();
   const { filters, setSearch, setType, setStatus, setCountry, filteredEntries } =
     useTokenizationFilters(entries);
 
-  const { open, activeEntry, openForEntry, openBlank, onOpenChange } = useConfigureAssetDialog();
+  const { open, activeEntry, openForEntry, onOpenChange } = useConfigureAssetDialog();
 
   const handleExport = React.useCallback(() => {
     // TODO: Wire actual export behavior when backend support is available.
@@ -27,7 +25,19 @@ export function TokenizationQueuePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <TokenizationHeader onOpenNewAsset={openBlank} />
+      <TokenizationHeader />
+
+      {error && (
+        <div
+          role="alert"
+          className="rounded-lg border border-error/40 bg-error/10 p-4 text-sm text-error"
+        >
+          {error}{" "}
+          <button className="underline" onClick={() => void refetch()}>
+            Retry
+          </button>
+        </div>
+      )}
 
       <TokenizationStats stats={stats} />
 
@@ -47,12 +57,12 @@ export function TokenizationQueuePage() {
         onExport={handleExport}
       />
 
-      <div className="grid gap-4 xl:grid-cols-[1.6fr_0.9fr]">
-        <RecentIssuanceActivity activity={activity} />
-        <StellarNetworkStatus networkStatus={networkStatus} />
-      </div>
-
-      <ConfigureDigitalAssetDialog open={open} onOpenChange={onOpenChange} entry={activeEntry} />
+      <ConfigureDigitalAssetDialog
+        open={open}
+        onOpenChange={onOpenChange}
+        entry={activeEntry}
+        onProgress={refetch}
+      />
     </div>
   );
 }

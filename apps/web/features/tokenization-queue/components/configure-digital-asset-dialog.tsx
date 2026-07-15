@@ -12,172 +12,213 @@ import {
   CredenzaTitle,
 } from "@repo/ui/components/ui-customs/credenza";
 import { Button } from "@repo/ui/components/ui/button";
-import { Input } from "@repo/ui/components/ui/input";
 import { Label } from "@repo/ui/components/ui/label";
 
-import type { IBlockchainParams, IIssuanceQueueEntry } from "../lib/types";
+import type { IIssuanceConfiguration, IIssuanceQueueEntry, IIssuanceSnapshot } from "../lib/types";
 
-const BLANK_PARAMS: IBlockchainParams = {
-  assetCode: "",
-  decimals: "",
-  totalSupply: "",
-};
-
-interface ConfigureDigitalAssetDialogProps {
+interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The row being configured, or null when configuring a brand-new digital asset. */
   entry: IIssuanceQueueEntry | null;
+  onProgress: () => Promise<void>;
 }
 
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label className="text-xs tracking-wide text-muted-foreground uppercase">{label}</Label>
-      <div className="rounded-md border border-border bg-muted px-3 py-2 text-sm font-medium text-foreground">
-        {value || "—"}
+      <div className="rounded-md border border-border bg-muted px-3 py-2 font-mono text-sm break-all text-foreground">
+        {value}
       </div>
     </div>
   );
 }
 
-export function ConfigureDigitalAssetDialog({
-  open,
-  onOpenChange,
-  entry,
-}: ConfigureDigitalAssetDialogProps) {
-  const [params, setParams] = React.useState<IBlockchainParams>(BLANK_PARAMS);
+export function ConfigureDigitalAssetDialog({ open, onOpenChange, entry, onProgress }: Props) {
+  const [configuration, setConfiguration] = React.useState<IIssuanceConfiguration | null>(null);
+  const [issuance, setIssuance] = React.useState<IIssuanceSnapshot | null>(entry?.issuance ?? null);
+  const [working, setWorking] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const summaryRef = React.useRef<HTMLDivElement>(null);
+
+  const refresh = React.useCallback(async (issuanceId: string) => {
+    const response = await fetch(`/api/issuances/${issuanceId}`, { cache: "no-store" });
+    if (!response.ok) throw new Error("The issuance status is temporarily unavailable.");
+    const body = (await response.json()) as { issuance: IIssuanceSnapshot };
+    setIssuance(body.issuance);
+  }, []);
 
   React.useEffect(() => {
-    if (open) {
-      setParams(entry?.blockchainParams ?? BLANK_PARAMS);
+    if (!open || !entry) return;
+    setIssuance(entry.issuance ?? null);
+    setError(null);
+    void fetch("/api/issuances/configuration", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Testnet issuance configuration is unavailable.");
+        const body = (await response.json()) as { configuration: IIssuanceConfiguration };
+        setConfiguration(body.configuration);
+      })
+      .catch((reason) =>
+        setError(reason instanceof Error ? reason.message : "Configuration unavailable."),
+      );
+    if (entry.issuance) void refresh(entry.issuance.issuanceId).catch(() => undefined);
+  }, [entry, open, refresh]);
+
+  React.useEffect(() => {
+    if (!open || !issuance || issuance.status === "Confirmed" || issuance.status === "Failed")
+      return;
+    const interval = window.setInterval(
+      () => void refresh(issuance.issuanceId).catch(() => undefined),
+      5_000,
+    );
+    return () => window.clearInterval(interval);
+  }, [issuance, open, refresh]);
+
+  const stateKey = issuance
+    ? `${issuance.status}:${issuance.trustlineState}:${issuance.paymentState}`
+    : "Ready";
+  React.useEffect(() => {
+    if (open) summaryRef.current?.focus();
+  }, [open, stateKey]);
+
+  if (!entry) return null;
+  const effectiveIssuer =
+    issuance?.issuerAccount ?? configuration?.issuerAccount ?? "Loading configuration";
+  const effectiveDistributor =
+    issuance?.distributorAccount ?? configuration?.distributorAccount ?? "Loading configuration";
+  const safeToResume =
+    issuance?.attempts.some((attempt) => attempt.state === "SafeToRetry") ?? false;
+  const needsReview =
+    issuance?.attempts.some((attempt) => attempt.state === "NeedsReview") ?? false;
+
+  async function start() {
+    if (!entry) return;
+    setWorking(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/assets/${entry.assetId}/issuance`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ expectedAssetVersion: entry.assetVersion }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error?.message ?? "Issuance could not start.");
+      await refresh(body.issuanceId);
+      await onProgress();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Issuance could not start.");
+    } finally {
+      setWorking(false);
     }
-  }, [open, entry]);
+  }
 
-  const internalReference = entry?.internalReference ?? "";
-  const assetCategory = entry?.assetCategory ?? "";
-  const issuerFacilityId = entry?.issuerFacilityId ?? "";
-
-  const truncatedRegulatoryUri = "ipfs://bafybeigd...regsora/sep8.json";
+  async function resume() {
+    if (!issuance) return;
+    setWorking(true);
+    setError(null);
+    try {
+      const response = await fetch(`/api/issuances/${issuance.issuanceId}/resume`, {
+        method: "POST",
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error?.message ?? "Issuance is not safe to resume.");
+      await refresh(issuance.issuanceId);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Issuance is not safe to resume.");
+    } finally {
+      setWorking(false);
+    }
+  }
 
   return (
     <Credenza open={open} onOpenChange={onOpenChange}>
       <CredenzaContent maxWidth="760px">
         <CredenzaHeader>
-          <CredenzaTitle>Configure Digital Asset</CredenzaTitle>
+          <CredenzaTitle>Testnet issuance</CredenzaTitle>
           <CredenzaDescription>
-            Deploy new asset parameters to the blockchain infrastructure.
+            Review the immutable approved configuration. Sora signs and reconciles in the
+            background.
           </CredenzaDescription>
         </CredenzaHeader>
-
         <CredenzaBody>
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_240px]">
-            {/* Left column — form */}
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold tracking-wider text-secondary uppercase">
-                  01 · Metadata Verification
-                </span>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <ReadOnlyField label="Internal Reference" value={internalReference} />
-                  <ReadOnlyField label="Asset Category" value={assetCategory} />
-                </div>
-                <ReadOnlyField label="Issuer Facility ID" value={issuerFacilityId} />
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <span className="text-xs font-semibold tracking-wider text-secondary uppercase">
-                  02 · Blockchain Params
-                </span>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="asset-code" className="text-xs text-muted-foreground">
-                      Asset Code
-                    </Label>
-                    <Input
-                      id="asset-code"
-                      placeholder="e.g. PCF7"
-                      value={params.assetCode}
-                      onChange={(e) => setParams((p) => ({ ...p, assetCode: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="decimals" className="text-xs text-muted-foreground">
-                      Decimals
-                    </Label>
-                    <Input
-                      id="decimals"
-                      placeholder="7"
-                      value={params.decimals}
-                      onChange={(e) => setParams((p) => ({ ...p, decimals: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="total-supply" className="text-xs text-muted-foreground">
-                    Total Supply (Initial)
-                  </Label>
-                  <Input
-                    id="total-supply"
-                    placeholder="450,000.00"
-                    value={params.totalSupply}
-                    onChange={(e) => setParams((p) => ({ ...p, totalSupply: e.target.value }))}
-                  />
-                </div>
-              </div>
+          <div className="flex flex-col gap-5">
+            <div
+              ref={summaryRef}
+              tabIndex={-1}
+              role="status"
+              aria-live="polite"
+              className="rounded-lg border border-border bg-muted p-4 outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <p className="font-semibold">
+                {needsReview
+                  ? "Needs review"
+                  : safeToResume
+                    ? "Safe to resume"
+                    : (issuance?.status ?? "Ready")}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Trustline: {issuance?.trustlineState ?? "Pending"}. Payment:{" "}
+                {issuance?.paymentState ?? "Pending"}.
+              </p>
             </div>
-
-            {/* Right column — live preview */}
-            <div className="flex flex-col gap-3">
-              <span className="text-\primary text-xs font-semibold tracking-wider uppercase">
-                Live Preview
-              </span>
-
-              <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted p-4">
-                <div className="flex size-9 items-center justify-center rounded-full bg-linear-120 from-primary via-[#1F0D3D] to-background p-2 text-xs font-bold text-background">
-                  <span className="text-xs font-bold text-foreground">
-                    <img src="/sora-logo.png" alt="Sora logo" className="h-4 w-4" />
-                  </span>
-                </div>
-
-                <div className="flex flex-col gap-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Type</span>
-                    <span className="font-medium text-foreground">SEP-20</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Asset Code</span>
-                    <span className="font-mono font-medium text-foreground">
-                      {params.assetCode || "---"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Flags</span>
-                    <span className="font-medium text-foreground">AUTH_REQ</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-muted-foreground">Regulatory Logic</span>
-                    <span className="truncate font-mono text-[11px] text-foreground">
-                      {truncatedRegulatoryUri}
-                    </span>
-                  </div>
-                </div>
+            {error && (
+              <div
+                role="alert"
+                className="rounded-lg border border-error/40 bg-error/10 p-3 text-sm text-error"
+              >
+                {error}
               </div>
-
-              <div className="rounded-lg border border-soft-primary/30 bg-soft-primary/10 p-3 font-mono text-[11px] text-soft-primary">
-                Configuration meets Stellar SEP standards. Ready for cryptographic signing.
-              </div>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <ReadOnlyField label="Network" value="Stellar Testnet" />
+              <ReadOnlyField label="Asset code" value={entry.code} />
+              <ReadOnlyField label="Canonical supply" value={entry.supply} />
+              <ReadOnlyField label="Internal reference" value={entry.internalReference} />
             </div>
+            <ReadOnlyField label="Issuer account" value={effectiveIssuer} />
+            <ReadOnlyField label="Distributor account" value={effectiveDistributor} />
+            {issuance?.trustlineProof && (
+              <div className="rounded-lg border border-border p-4 text-sm">
+                <p className="font-semibold">Trustline proof</p>
+                <p>Type: {issuance.trustlineProof.type}</p>
+                <p>Limit: {issuance.trustlineProof.limit}</p>
+                {issuance.trustlineProof.hash && (
+                  <p className="font-mono break-all">Hash: {issuance.trustlineProof.hash}</p>
+                )}
+                {issuance.trustlineProof.ledger && <p>Ledger: {issuance.trustlineProof.ledger}</p>}
+              </div>
+            )}
+            {issuance?.paymentProof && (
+              <div className="rounded-lg border border-success/40 bg-success/10 p-4 text-sm">
+                <p className="font-semibold">Confirmed payment proof</p>
+                <p className="font-mono break-all">Hash: {issuance.paymentProof.hash}</p>
+                <p>Ledger: {issuance.paymentProof.ledger}</p>
+                <p>Delivered supply: {issuance.paymentProof.amount}</p>
+              </div>
+            )}
+            {issuance?.safeErrorCode && (
+              <p className="text-sm text-error">Failure code: {issuance.safeErrorCode}</p>
+            )}
           </div>
         </CredenzaBody>
-
         <CredenzaFooter className="flex-row justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Save Draft
+            Close
           </Button>
-          <Button variant="gradient" onClick={() => onOpenChange(false)}>
-            Finalize &amp; Sign TX
-          </Button>
+          {!issuance && (
+            <Button
+              variant="gradient"
+              disabled={working || !configuration}
+              onClick={() => void start()}
+            >
+              {working ? "Starting…" : "Start issuance"}
+            </Button>
+          )}
+          {safeToResume && (
+            <Button variant="gradient" disabled={working} onClick={() => void resume()}>
+              {working ? "Resuming…" : "Resume safely"}
+            </Button>
+          )}
         </CredenzaFooter>
       </CredenzaContent>
     </Credenza>

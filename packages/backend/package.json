@@ -7,6 +7,7 @@
     "./domain/asset-record": "./src/domain/asset-record.ts",
     "./domain/asset-lifecycle": "./src/domain/asset-lifecycle.ts",
     "./domain/issuance": "./src/domain/issuance.ts",
+    "./domain/tokenization": "./src/domain/tokenization.ts",
     "./stellar/config": "./src/stellar/config.ts",
     "./stellar/auth": "./src/stellar/auth.ts",
     "./api": "./convex/_generated/api.js"

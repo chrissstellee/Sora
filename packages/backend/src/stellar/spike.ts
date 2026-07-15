@@ -84,10 +84,13 @@ async function run() {
     server.loadAccount(issuer.publicKey()),
     server.loadAccount(distributor.publicKey()),
   ]);
+  const trustlineMinTime = Math.floor(Date.now() / 1000);
 
   const trustline = buildTrustlineTransaction({
     sourceAccount: distributor.publicKey(),
     sourceSequence: distributorBefore.sequence,
+    minTime: trustlineMinTime,
+    maxTime: trustlineMinTime + 300,
     assetCode,
     issuerAccount: issuer.publicKey(),
     limit: TRUST_LIMIT,
@@ -97,9 +100,12 @@ async function run() {
   const trustlineResult = await submitOnceOrReconcile(server, trustline, trustlineHash);
 
   const issuerForPayment = await server.loadAccount(issuer.publicKey());
+  const paymentMinTime = Math.floor(Date.now() / 1000);
   const payment = buildIssuancePaymentTransaction({
     sourceAccount: issuer.publicKey(),
     sourceSequence: issuerForPayment.sequence,
+    minTime: paymentMinTime,
+    maxTime: paymentMinTime + 300,
     assetCode,
     distributorAccount: distributor.publicKey(),
     amount: ASSET_AMOUNT,

@@ -12,14 +12,15 @@ import { STELLAR_TESTNET_CONFIG } from "./config.js";
 export interface ClassicTransactionInput {
   sourceAccount: string;
   sourceSequence: string;
-  timeoutSeconds?: number;
+  minTime: number;
+  maxTime: number;
 }
 
 function builder(input: ClassicTransactionInput) {
   return new TransactionBuilder(new Account(input.sourceAccount, input.sourceSequence), {
     fee: BASE_FEE,
     networkPassphrase: STELLAR_TESTNET_CONFIG.networkPassphrase,
-  }).setTimeout(input.timeoutSeconds ?? 60);
+  }).setTimebounds(input.minTime, input.maxTime);
 }
 
 export function buildTrustlineTransaction(

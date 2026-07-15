@@ -1,39 +1,80 @@
-export type TIssuanceStatus = "Ready" | "Draft" | "Issued" | "Failed";
+import type { TESTNET_UI_LABEL } from "@repo/backend/stellar/config";
 
-export type TIssuanceNetwork = typeof TESTNET_UI_LABEL | "TBD";
+export type TIssuanceStatus = "Ready" | "Pending" | "Submitted" | "Confirmed" | "Failed";
+export type TIssuanceNetwork = typeof TESTNET_UI_LABEL;
+export type TStepState =
+  | "Prepared"
+  | "Submitted"
+  | "Reconciling"
+  | "Confirmed"
+  | "SafeToRetry"
+  | "NeedsReview";
+
+export interface IIssuanceAttempt {
+  purpose: "trustline" | "issuance-payment";
+  attemptNumber: number;
+  state: TStepState;
+  sourceAccount: string;
+  sequence: string;
+  minTime: number;
+  maxTime: number;
+  hash: string;
+  submittedAt?: number;
+  confirmedAt?: number;
+  ledger?: number;
+  ledgerCloseTime?: number;
+}
+
+export interface IIssuanceSnapshot {
+  issuanceId: string;
+  assetId: string;
+  assetName: string;
+  category: string;
+  estimatedValue: string;
+  currency: string;
+  countryCode: string;
+  network: "Testnet";
+  status: Exclude<TIssuanceStatus, "Ready">;
+  assetVersion: number;
+  assetCode: string;
+  supply: string;
+  internalReference: string;
+  issuerAccount: string;
+  distributorAccount: string;
+  trustlineState: string;
+  paymentState: string;
+  safeErrorCode?: string;
+  attempts: IIssuanceAttempt[];
+  trustlineProof: null | {
+    type: "verified-existing" | "transaction";
+    hash?: string;
+    ledger?: number;
+    checkedAt?: number;
+    limit?: string;
+  };
+  paymentProof: null | {
+    hash: string;
+    ledger?: number;
+    ledgerCloseTime?: number;
+    amount: string;
+  };
+}
 
 export interface IIssuanceQueueEntry {
   id: string;
   name: string;
   assetId: string;
+  assetVersion: number;
   category: string;
-  /** Value in millions of USD. */
+  countryCode: string;
   value: number;
+  currency: string;
   code: string;
+  supply: string;
   status: TIssuanceStatus;
   network: TIssuanceNetwork;
-  /** Metadata surfaced in the "01 · Metadata Verification" section of the configure dialog. */
   internalReference: string;
-  assetCategory: string;
-  issuerFacilityId: string;
-  /** Pre-fills the blockchain params step when re-opening a configured/failed asset. */
-  blockchainParams?: IBlockchainParams;
-}
-
-export type TActivityType = "success" | "info" | "error";
-
-export interface IRecentActivityEntry {
-  id: string;
-  type: TActivityType;
-  message: string;
-  meta: string;
-}
-
-export interface IStellarNetworkStatus {
-  testnetHealth: "OPTIMAL" | "DEGRADED" | "DOWN";
-  baseFee: string;
-  syncProgress: number;
-  networkLoadPercent: number;
+  issuance?: IIssuanceSnapshot;
 }
 
 export interface ITokenizationStats {
@@ -47,9 +88,8 @@ export interface ITokenizationStats {
   failedCaption: string;
 }
 
-export interface IBlockchainParams {
-  assetCode: string;
-  decimals: string;
-  totalSupply: string;
+export interface IIssuanceConfiguration {
+  network: "Testnet";
+  issuerAccount: string;
+  distributorAccount: string;
 }
-import type { TESTNET_UI_LABEL } from "@repo/backend/stellar/config";

@@ -1,12 +1,6 @@
-export const ASSET_LIFECYCLE_STATES = [
-  "draft",
-  "review",
-  "ready",
-  "issuing",
-  "active",
-  "failed",
-  "archived",
-] as const;
+import { ASSET_LIFECYCLE_OPTIONS } from "./asset-record.js";
+
+export const ASSET_LIFECYCLE_STATES = ASSET_LIFECYCLE_OPTIONS;
 
 export type AssetLifecycleState = (typeof ASSET_LIFECYCLE_STATES)[number];
 
@@ -16,13 +10,13 @@ export interface AssetLifecycleTransition {
 }
 
 const ALLOWED_TRANSITIONS: Record<AssetLifecycleState, readonly AssetLifecycleState[]> = {
-  draft: ["review", "archived"],
-  review: ["draft", "ready", "archived"],
-  ready: ["issuing", "archived"],
-  issuing: ["active", "failed"],
-  active: ["archived"],
-  failed: ["issuing"],
-  archived: [],
+  Draft: ["Review", "Archived"],
+  Review: ["Draft", "Ready", "Archived"],
+  Ready: ["Issuing", "Archived"],
+  Issuing: ["Active", "Failed"],
+  Active: ["Archived"],
+  Failed: [],
+  Archived: [],
 };
 
 export function isAssetLifecycleTransitionAllowed(transition: AssetLifecycleTransition): boolean {

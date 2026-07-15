@@ -27,11 +27,15 @@ describe("classic Testnet envelopes", () => {
     const tx = buildTrustlineTransaction({
       sourceAccount: distributor.publicKey(),
       sourceSequence: "41",
+      minTime: 1_000,
+      maxTime: 1_300,
       assetCode: "SORA0",
       issuerAccount: issuer.publicKey(),
       limit: "1000",
     });
     expect(tx.source).toBe(distributor.publicKey());
+    expect(tx.sequence).toBe("42");
+    expect(tx.timeBounds).toEqual({ minTime: "1000", maxTime: "1300" });
     expect(tx.operations[0]).toMatchObject({ type: "changeTrust", limit: "1000.0000000" });
     expect(precomputedHash(tx)).toMatch(/^[a-f0-9]{64}$/);
     const mainnetTx = new TransactionBuilder(new Account(distributor.publicKey(), "41"), {
@@ -49,6 +53,8 @@ describe("classic Testnet envelopes", () => {
     const tx = buildIssuancePaymentTransaction({
       sourceAccount: issuer.publicKey(),
       sourceSequence: "7",
+      minTime: 2_000,
+      maxTime: 2_300,
       assetCode: "SORA0",
       distributorAccount: distributor.publicKey(),
       amount: "25",

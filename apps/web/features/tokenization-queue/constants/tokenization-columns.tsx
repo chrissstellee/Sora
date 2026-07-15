@@ -9,8 +9,9 @@ import type { DataTableColumn } from "@repo/ui/components/ui-customs/data-table"
 
 const STATUS_BADGE_VARIANT: Record<TIssuanceStatus, "secondary" | "gray" | "success" | "error"> = {
   Ready: "secondary",
-  Draft: "gray",
-  Issued: "success",
+  Pending: "gray",
+  Submitted: "secondary",
+  Confirmed: "success",
   Failed: "error",
 };
 
@@ -46,22 +47,13 @@ function IssuanceActionButton({ entry, onConfigure }: IssuanceActionButtonProps)
         </Button>
       );
     case "Failed":
-      return (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleClick}
-          className="w-full border-error/40 text-error hover:bg-error/10 hover:text-error"
-        >
-          Retry
-        </Button>
-      );
-    case "Draft":
-    case "Issued":
+    case "Pending":
+    case "Submitted":
+    case "Confirmed":
     default:
       return (
         <Button variant="outline" size="sm" onClick={handleClick} className="w-full">
-          Re-Configure
+          View issuance
         </Button>
       );
   }

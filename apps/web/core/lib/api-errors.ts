@@ -8,6 +8,28 @@ const STATUS_BY_CODE: Record<string, number> = {
   REGISTRATION_NUMBER_CONFLICT: 409,
   ASSET_VERSION_CONFLICT: 409,
   ASSET_NOT_EDITABLE: 409,
+  PROFILE_VERSION_CONFLICT: 409,
+  DOCUMENT_VERSION_CONFLICT: 409,
+  LIFECYCLE_CONFLICT: 409,
+  UPLOAD_INTENT_REPLAYED: 409,
+  STORAGE_OBJECT_ALREADY_LINKED: 409,
+  DOCUMENT_LIMIT_REACHED: 413,
+  DOCUMENT_TOO_LARGE: 413,
+  DOCUMENT_TYPE_UNSUPPORTED: 415,
+  DOCUMENT_EXTENSION_MISMATCH: 415,
+  DOCUMENT_EMPTY: 415,
+  DOCUMENT_NOT_FOUND: 404,
+  UPLOAD_INTENT_NOT_FOUND: 404,
+  UPLOAD_INTENT_EXPIRED: 409,
+  ASSET_NOT_READY_FOR_REVIEW: 422,
+  INVALID_RETURN_REASON: 422,
+  INVALID_CANONICAL_SUPPLY: 422,
+  ISSUANCE_NOT_FOUND: 404,
+  ASSET_NOT_READY_FOR_ISSUANCE: 409,
+  MANAGED_ASSET_IDENTITY_CONFLICT: 409,
+  ISSUANCE_NOT_SAFE_TO_RESUME: 409,
+  APPROVED_MANIFEST_MISSING: 409,
+  ISSUANCE_PUBLIC_ACCOUNTS_INVALID: 503,
   INVALID_CREATE_REQUEST_ID: 422,
   INVALID_CURSOR: 422,
   INVALID_LIMIT: 422,
@@ -54,6 +76,32 @@ function errorMessage(code: string): string {
   if (code === "ASSET_NOT_FOUND") return "Asset not found.";
   if (code === "ASSET_VERSION_CONFLICT") return "The asset changed since it was loaded.";
   if (code === "ASSET_NOT_EDITABLE") return "Only Draft assets can be edited.";
+  if (code === "PROFILE_VERSION_CONFLICT")
+    return "The tokenization profile changed since it was loaded.";
+  if (code === "DOCUMENT_VERSION_CONFLICT") return "The document changed since it was loaded.";
+  if (code === "LIFECYCLE_CONFLICT") return "The asset is not in a state that permits this action.";
+  if (code === "DOCUMENT_LIMIT_REACHED") return "An asset can have at most 10 active documents.";
+  if (code === "DOCUMENT_TOO_LARGE") return "Documents must be 10 MB or smaller.";
+  if (["DOCUMENT_TYPE_UNSUPPORTED", "DOCUMENT_EXTENSION_MISMATCH", "DOCUMENT_EMPTY"].includes(code))
+    return "The stored file is empty, unsupported, or does not match its extension.";
+  if (code === "DOCUMENT_NOT_FOUND" || code === "UPLOAD_INTENT_NOT_FOUND")
+    return "Document not found.";
+  if (code === "UPLOAD_INTENT_EXPIRED" || code === "UPLOAD_INTENT_REPLAYED")
+    return "The upload authorization expired or was already used.";
+  if (code === "ASSET_NOT_READY_FOR_REVIEW")
+    return "Complete the tokenization profile and add a validated document first.";
+  if (code === "INVALID_RETURN_REASON")
+    return "Provide a return reason between 10 and 500 characters.";
+  if (code === "INVALID_CANONICAL_SUPPLY")
+    return "Supply must be positive, use at most seven decimals, and fit Stellar limits.";
+  if (code === "ISSUANCE_NOT_FOUND") return "Issuance not found.";
+  if (code === "ASSET_NOT_READY_FOR_ISSUANCE") return "Only a Ready asset can start issuance.";
+  if (code === "MANAGED_ASSET_IDENTITY_CONFLICT")
+    return "That Testnet asset identity is already reserved.";
+  if (code === "ISSUANCE_NOT_SAFE_TO_RESUME")
+    return "Issuance cannot be resumed until reconciliation proves it is safe.";
+  if (code === "APPROVED_MANIFEST_MISSING")
+    return "The approved immutable review basis is unavailable.";
   if (code === "REGISTRATION_NUMBER_CONFLICT") return "Registration number is already in use.";
   if (code === "CREATE_REQUEST_CONFLICT")
     return "Create request was already used with different data.";

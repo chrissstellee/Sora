@@ -7,17 +7,16 @@ import {
 } from "./asset-lifecycle.js";
 
 const allowed: AssetLifecycleTransition[] = [
-  { from: "draft", to: "review" },
-  { from: "draft", to: "archived" },
-  { from: "review", to: "draft" },
-  { from: "review", to: "ready" },
-  { from: "review", to: "archived" },
-  { from: "ready", to: "issuing" },
-  { from: "ready", to: "archived" },
-  { from: "issuing", to: "active" },
-  { from: "issuing", to: "failed" },
-  { from: "failed", to: "issuing" },
-  { from: "active", to: "archived" },
+  { from: "Draft", to: "Review" },
+  { from: "Draft", to: "Archived" },
+  { from: "Review", to: "Draft" },
+  { from: "Review", to: "Ready" },
+  { from: "Review", to: "Archived" },
+  { from: "Ready", to: "Issuing" },
+  { from: "Ready", to: "Archived" },
+  { from: "Issuing", to: "Active" },
+  { from: "Issuing", to: "Failed" },
+  { from: "Active", to: "Archived" },
 ];
 
 describe("asset lifecycle", () => {
@@ -32,7 +31,8 @@ describe("asset lifecycle", () => {
   }
 
   it("rejects invalid and terminal transitions", () => {
-    expect(() => transitionAssetLifecycle("draft", "active")).toThrow(/Invalid/);
-    expect(() => transitionAssetLifecycle("archived", "draft")).toThrow(/Invalid/);
+    expect(() => transitionAssetLifecycle("Draft", "Active")).toThrow(/Invalid/);
+    expect(() => transitionAssetLifecycle("Archived", "Draft")).toThrow(/Invalid/);
+    expect(() => transitionAssetLifecycle("Failed", "Issuing")).toThrow(/Invalid/);
   });
 });

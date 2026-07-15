@@ -52,7 +52,7 @@ export function useTokenizationFilters(
 
       // Country isn't part of the mocked entry shape yet — kept as a pass-through
       // filter so the toolbar UI is fully wired once country data is available.
-      const matchesCountry = filters.country === "all" || true;
+      const matchesCountry = filters.country === "all" || entry.countryCode === filters.country;
 
       return matchesSearch && matchesType && matchesStatus && matchesCountry;
     });

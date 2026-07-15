@@ -1,191 +1,98 @@
-export const ISSUANCE_STATUSES = [
-  "pending",
-  "submitted",
-  "confirmed",
-  "failed",
-  "ambiguous",
+export const ISSUANCE_STATUSES = ["Pending", "Submitted", "Confirmed", "Failed"] as const;
+export const ISSUANCE_STEP_STATES = [
+  "Prepared",
+  "Submitted",
+  "Reconciling",
+  "Confirmed",
+  "SafeToRetry",
+  "NeedsReview",
 ] as const;
+export const ISSUANCE_RETRY_DELAYS_SECONDS = [15, 30, 60, 120, 300] as const;
 
 export type IssuanceStatus = (typeof ISSUANCE_STATUSES)[number];
+export type IssuanceStepState = (typeof ISSUANCE_STEP_STATES)[number];
+export type IssuancePurpose = "trustline" | "issuance-payment";
 
-export interface TransactionIdentity {
-  hash: string;
+export interface DurableTransactionIdentity {
+  network: "Testnet";
+  purpose: IssuancePurpose;
+  attemptNumber: number;
   sourceAccount: string;
   sequence: string;
-  operationPurpose: "trustline" | "issuance-payment";
-  submissionIdentity: string;
-  submittedAt: string;
-  horizonResult?: "success" | "failed" | "unknown";
-  ledger?: number;
+  baseFee: string;
+  minTime: number;
+  maxTime: number;
+  assetCode: string;
+  issuerAccount: string;
+  distributorAccount: string;
+  amount: string;
+  hash: string;
 }
 
-export interface ReconciliationEvidence {
-  checkedAt: string;
-  methods: Array<"transaction-hash" | "account-sequence">;
-  outcome: "confirmed" | "failed" | "unresolved" | "safe-to-retry";
-  horizonResult?: "success" | "failed" | "not-found";
-  ledger?: number;
+export type HashEvidence =
+  | { result: "FoundSuccess"; ledger: number; ledgerCloseTime: number }
+  | { result: "FoundFailed"; ledger: number; ledgerCloseTime: number }
+  | { result: "Missing" }
+  | { result: "Unavailable" };
+
+export type ReconciliationDecision =
+  | "Confirmed"
+  | "Failed"
+  | "IdenticalResubmission"
+  | "SafeToRetry"
+  | "Reconciling"
+  | "NeedsReview";
+
+export function reconciliationDecision(input: {
+  identity: DurableTransactionIdentity;
+  hash: HashEvidence;
   observedSourceSequence?: string;
-  transactionSequence?: string;
-  detail: string;
+  latestClosedLedgerTime?: number;
+}): ReconciliationDecision {
+  if (input.hash.result === "FoundSuccess") return "Confirmed";
+  if (input.hash.result === "FoundFailed") return "Failed";
+  if (input.hash.result === "Unavailable") return "Reconciling";
+  if (input.observedSourceSequence === undefined || input.latestClosedLedgerTime === undefined) {
+    return "Reconciling";
+  }
+  const observed = BigInt(input.observedSourceSequence);
+  const expected = BigInt(input.identity.sequence);
+  if (observed >= expected) return "NeedsReview";
+  if (observed !== expected - 1n) return "NeedsReview";
+  if (input.latestClosedLedgerTime <= input.identity.maxTime) return "IdenticalResubmission";
+  return "SafeToRetry";
 }
 
-export interface IssuanceRecord {
-  id: string;
-  logicalKey: string;
-  status: IssuanceStatus;
-  transaction?: TransactionIdentity;
-  reconciliationEvidence: ReconciliationEvidence[];
-  createdAt: string;
-  updatedAt: string;
+export function validateDurableIdentity(identity: DurableTransactionIdentity): void {
+  if (identity.network !== "Testnet") throw new Error("ISSUANCE_NETWORK_MISMATCH");
+  if (!/^[a-f0-9]{64}$/.test(identity.hash)) throw new Error("INVALID_TRANSACTION_HASH");
+  if (!/^\d+$/.test(identity.sequence) || BigInt(identity.sequence) <= 0n) {
+    throw new Error("INVALID_TRANSACTION_SEQUENCE");
+  }
+  if (identity.minTime <= 0 || identity.maxTime - identity.minTime !== 300) {
+    throw new Error("INVALID_TRANSACTION_TIME_BOUNDS");
+  }
+  if (identity.attemptNumber < 1 || !Number.isInteger(identity.attemptNumber)) {
+    throw new Error("INVALID_ATTEMPT_NUMBER");
+  }
 }
 
-export interface AtomicClaimResult {
-  record: IssuanceRecord;
-  claimed: boolean;
+export function retryDelaySeconds(attemptNumber: number): number {
+  return ISSUANCE_RETRY_DELAYS_SECONDS[
+    Math.min(Math.max(attemptNumber - 1, 0), ISSUANCE_RETRY_DELAYS_SECONDS.length - 1)
+  ]!;
 }
 
-export interface IssuanceRepository {
-  claim(logicalKey: string, create: () => IssuanceRecord): Promise<AtomicClaimResult>;
-  save(record: IssuanceRecord): Promise<IssuanceRecord>;
-}
-
-export interface IssuanceSubmitAdapter {
-  prepare(logicalKey: string): Promise<TransactionIdentity>;
-  submit(record: IssuanceRecord): Promise<TransactionIdentity>;
-}
-
-export interface HorizonReconciler {
-  reconcile(record: IssuanceRecord): Promise<ReconciliationEvidence>;
-}
-
-export interface RequestIssuanceInput {
-  logicalKey: string;
-  repository: IssuanceRepository;
-  submitAdapter: IssuanceSubmitAdapter;
-  now?: () => Date;
-  createId?: () => string;
-}
-
-const ALLOWED_TRANSITIONS: Record<IssuanceStatus, readonly IssuanceStatus[]> = {
-  pending: ["submitted", "failed"],
-  submitted: ["confirmed", "failed", "ambiguous"],
-  ambiguous: ["confirmed", "failed"],
-  failed: ["pending"],
-  confirmed: [],
+const STATUS_TRANSITIONS: Record<IssuanceStatus, readonly IssuanceStatus[]> = {
+  Pending: ["Submitted", "Failed"],
+  Submitted: ["Confirmed", "Failed"],
+  Confirmed: [],
+  Failed: [],
 };
 
-export function transitionIssuance(
-  record: IssuanceRecord,
-  status: IssuanceStatus,
-  options: { reconciled?: boolean; now?: Date } = {},
-): IssuanceRecord {
-  if (!ALLOWED_TRANSITIONS[record.status].includes(status)) {
-    throw new Error(`Invalid issuance transition: ${record.status} -> ${status}`);
+export function transitionIssuanceStatus(from: IssuanceStatus, to: IssuanceStatus): IssuanceStatus {
+  if (!STATUS_TRANSITIONS[from].includes(to)) {
+    throw new Error(`Invalid issuance transition: ${from} -> ${to}`);
   }
-  if (
-    (record.status === "ambiguous" || (record.status === "failed" && status === "pending")) &&
-    !options.reconciled
-  ) {
-    throw new Error("This issuance transition requires reconciliation evidence");
-  }
-  return { ...record, status, updatedAt: (options.now ?? new Date()).toISOString() };
-}
-
-export async function requestIssuance(input: RequestIssuanceInput): Promise<IssuanceRecord> {
-  const now = input.now ?? (() => new Date());
-  const createdAt = now().toISOString();
-  const preparedTransaction = await input.submitAdapter.prepare(input.logicalKey);
-  const claim = await input.repository.claim(input.logicalKey, () => ({
-    id: input.createId?.() ?? crypto.randomUUID(),
-    logicalKey: input.logicalKey,
-    status: "pending",
-    transaction: preparedTransaction,
-    reconciliationEvidence: [],
-    createdAt,
-    updatedAt: createdAt,
-  }));
-
-  if (!claim.claimed) return claim.record;
-
-  try {
-    const transaction = await input.submitAdapter.submit(claim.record);
-    return input.repository.save({
-      ...transitionIssuance(claim.record, "submitted", { now: now() }),
-      transaction,
-    });
-  } catch (error) {
-    if (error instanceof UncertainSubmissionError) {
-      const submitted = transitionIssuance(claim.record, "submitted", { now: now() });
-      return input.repository.save({
-        ...transitionIssuance(submitted, "ambiguous", { now: now() }),
-      });
-    }
-    return input.repository.save(transitionIssuance(claim.record, "failed", { now: now() }));
-  }
-}
-
-export class UncertainSubmissionError extends Error {
-  constructor() {
-    super("Transaction submission result is uncertain; reconciliation is required");
-    this.name = "UncertainSubmissionError";
-  }
-}
-
-export async function reconcileIssuance(input: {
-  record: IssuanceRecord;
-  repository: IssuanceRepository;
-  reconciler: HorizonReconciler;
-}): Promise<IssuanceRecord> {
-  if (
-    input.record.status !== "pending" &&
-    input.record.status !== "ambiguous" &&
-    input.record.status !== "failed"
-  ) {
-    throw new Error(`Issuance in ${input.record.status} cannot be reconciled`);
-  }
-  if (!input.record.transaction) {
-    throw new Error("Issuance cannot be reconciled without a precomputed transaction identity");
-  }
-  const evidence = await input.reconciler.reconcile(input.record);
-  validateReconciliationEvidence(evidence);
-  const withEvidence = {
-    ...input.record,
-    reconciliationEvidence: [...input.record.reconciliationEvidence, evidence],
-  };
-  if (evidence.outcome === "unresolved") return input.repository.save(withEvidence);
-
-  if (input.record.status === "pending" && evidence.outcome === "confirmed") {
-    const submitted = transitionIssuance(withEvidence, "submitted", { reconciled: true });
-    return input.repository.save(transitionIssuance(submitted, "confirmed", { reconciled: true }));
-  }
-
-  const target =
-    evidence.outcome === "confirmed"
-      ? "confirmed"
-      : evidence.outcome === "safe-to-retry"
-        ? "pending"
-        : "failed";
-  if (target === input.record.status) return input.repository.save(withEvidence);
-  return input.repository.save(transitionIssuance(withEvidence, target, { reconciled: true }));
-}
-
-function validateReconciliationEvidence(evidence: ReconciliationEvidence): void {
-  if (evidence.outcome === "unresolved") return;
-  const methods = new Set(evidence.methods);
-  if (!methods.has("transaction-hash") || !methods.has("account-sequence")) {
-    throw new Error(
-      "Conclusive reconciliation requires transaction-hash and account-sequence evidence",
-    );
-  }
-  if (evidence.outcome === "safe-to-retry") {
-    if (
-      evidence.horizonResult !== "not-found" ||
-      evidence.observedSourceSequence === undefined ||
-      evidence.transactionSequence === undefined ||
-      BigInt(evidence.observedSourceSequence) >= BigInt(evidence.transactionSequence)
-    ) {
-      throw new Error("Safe recovery requires a missing hash and an unconsumed source sequence");
-    }
-  }
+  return to;
 }

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui
 import { ErrorState, LoadingState } from "../components/request-state";
 import { useRequest } from "../lib/use-request";
 import { formatAssetValue, getActivity, getAsset } from "../lib/workspace-api";
+import { Phase3Preparation } from "./phase3-preparation";
 
 export function AssetDetailsPage({ assetId }: { assetId: string }) {
   const assetRequest = useRequest((signal) => getAsset(assetId, signal), [assetId]);
@@ -96,14 +97,9 @@ export function AssetDetailsPage({ assetId }: { assetId: string }) {
           <ActivityList items={activityRequest.data?.items ?? []} />
         </CardContent>
       </Card>
-      <Card className="border-dashed">
-        <CardContent className="py-5 text-sm text-muted-foreground">
-          <strong className="text-foreground">
-            Issuance and documents are not available in Phase 2.
-          </strong>{" "}
-          This workspace currently manages persisted asset records only.
-        </CardContent>
-      </Card>
+      {(["Draft", "Review", "Ready"] as const).includes(asset.lifecycle as never) && (
+        <Phase3Preparation asset={asset} />
+      )}
     </div>
   );
 }

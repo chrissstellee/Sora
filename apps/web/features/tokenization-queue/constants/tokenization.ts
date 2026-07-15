@@ -11,8 +11,9 @@ export const TYPE_FILTER_OPTIONS = [
 export const STATUS_FILTER_OPTIONS = [
   { value: "all", label: "All Statuses" },
   { value: "Ready", label: "Ready" },
-  { value: "Draft", label: "Draft" },
-  { value: "Issued", label: "Issued" },
+  { value: "Pending", label: "Pending" },
+  { value: "Submitted", label: "Submitted" },
+  { value: "Confirmed", label: "Confirmed" },
   { value: "Failed", label: "Failed" },
 ];
 
