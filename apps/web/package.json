@@ -6,29 +6,56 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev --port 3000",
+    "lint": "oxlint .",
     "lint:fix": "oxlint --fix . && oxfmt --write . && next typegen && tsc --noEmit",
-    "start": "next start"
+    "phase2:browser:install": "playwright install chromium",
+    "phase2:e2e": "playwright test e2e/phase2-workspace.spec.ts --project=chromium",
+    "phase2:perf": "node scripts/phase2/performance.mjs",
+    "phase2:seed": "node scripts/phase2/seed.mjs",
+    "phase5:browser:install": "playwright install chromium firefox webkit",
+    "phase5:e2e": "playwright test e2e/phase5-proof.spec.ts",
+    "phase5:perf": "node scripts/phase5/performance.mjs",
+    "phase5:seed": "node scripts/phase5/seed.mjs",
+    "start": "next start",
+    "test": "vitest run",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@creit-tech/stellar-wallets-kit": "jsr:^2.5.0",
+    "@fontsource-variable/hanken-grotesk": "^5.2.8",
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@hookform/resolvers": "^5.2.2",
     "@hookstate/core": "^4.0.2",
     "@hookstate/devtools": "^4.0.3",
     "@repo/backend": "workspace:*",
     "@repo/ui": "workspace:*",
     "convex": "^1.31.7",
+    "framer-motion": "^12.42.2",
     "lodash.merge": "^4.6.2",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
+    "ogl": "^1.0.11",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-hook-form": "^7.71.1",
+    "recharts": "2.15.4",
     "sonner": "^2.0.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
     "@repo/typescript-config": "workspace:*",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/lodash.merge": "^4.6.9",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.13",
     "@types/react-dom": "19.2.3",
-    "typescript": "5.9.2"
+    "@vitejs/plugin-react": "6.0.3",
+    "jsdom": "^28.0.0",
+    "typescript": "5.9.2",
+    "vitest": "4.1.10"
   }
 }

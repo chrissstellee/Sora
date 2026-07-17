@@ -1,30 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+# Sora web application
 
-## Getting Started
+The Next.js 16 application owns the browser-facing authentication and Asset Workspace boundary. It verifies SEP-10 responses, manages opaque `HttpOnly` session cookies, resolves the session before protected layouts render, and calls Convex with a server-only boundary credential plus the session-token hash.
 
-First, run the development server:
+## Run locally
 
-```bash
-pnpm dev
+From the repository root, copy `.env.example` to `apps/web/.env.local`, set the private values described in `apps/web/.env.example`, and run:
+
+```powershell
+pnpm.cmd --filter web dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application runs on `http://localhost:3000`. Run Convex separately with `pnpm.cmd --filter @repo/backend dev` when persistence is required.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Asset Workspace
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
+Production asset, dashboard, search, and activity screens use the authenticated routes under `app/api/assets`, `app/api/workspace`, and `app/api/activity`. Browser clients use `features/assets/lib/workspace-api.ts` with `cache: "no-store"`; canonical validation comes from `@repo/backend/domain/asset-record`.
 
-## Learn More
+Phase 2 preview verification is intentionally environment-driven:
 
-To learn more about Next.js, take a look at the following resources:
+```powershell
+pnpm.cmd phase2:browser:install
+pnpm.cmd verify:phase2
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This requires a disposable production preview and two private Organization session cookies. Read [the Phase 2 runbook](../../docs/phase-2/verification-runbook.md) before running it.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## References
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Authenticated boundary ADR](../../docs/adr/0004-authenticated-next-convex-boundary.md)
+- [Asset Workspace contract](../../docs/phase-2/asset-workspace-contract.md)
+- [Phase 2 evidence matrix](../../docs/phase-2/evidence-matrix.md)

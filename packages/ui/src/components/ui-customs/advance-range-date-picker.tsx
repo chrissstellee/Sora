@@ -18,7 +18,7 @@ import useLocalStorage from "../../hooks/useLocalStorage";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { Calendar } from "../ui/calendar";
-import { Input } from "../ui/input";
+import { DatePicker } from "../ui/date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
 
@@ -209,32 +209,32 @@ export function AdvancedDateRangePicker({
                     />
                   </div>
                   <div className="flex flex-col gap-2 md:flex-row">
-                    <Input
-                      type="date"
-                      value={format(date.from, "yyyy-MM-dd")}
-                      onChange={(e) => {
-                        setDate((prev) => {
-                          const newDate = {
-                            ...prev,
-                            from: new Date(e.target.value),
-                          };
-                          onChange?.(newDate);
-                          return newDate;
-                        });
+                    <DatePicker
+                      className="flex-1"
+                      value={date.from}
+                      placeholder="Start date"
+                      onChange={(newDate) => {
+                        if (newDate) {
+                          setDate((prev: DateRange) => {
+                            const next = { ...prev, from: newDate };
+                            onChange?.(next);
+                            return next;
+                          });
+                        }
                       }}
                     />
-                    <Input
-                      type="date"
-                      value={format(date.to, "yyyy-MM-dd")}
-                      onChange={(e) => {
-                        setDate((prev) => {
-                          const newDate = {
-                            ...prev,
-                            to: new Date(e.target.value),
-                          };
-                          onChange?.(newDate);
-                          return newDate;
-                        });
+                    <DatePicker
+                      className="flex-1"
+                      value={date.to}
+                      placeholder="End date"
+                      onChange={(newDate) => {
+                        if (newDate) {
+                          setDate((prev: DateRange) => {
+                            const next = { ...prev, to: newDate };
+                            onChange?.(next);
+                            return next;
+                          });
+                        }
                       }}
                     />
                   </div>

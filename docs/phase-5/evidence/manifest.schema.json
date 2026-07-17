@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sora.example/schemas/phase-5-run-manifest-v1.json",
+  "title": "Sora Phase 5 formal run manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "outcome",
+    "environment",
+    "browserTarget",
+    "asset",
+    "payment",
+    "ownership",
+    "recoveryScenario",
+    "activityEventCount",
+    "finalizedAt",
+    "revision"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runId": { "type": "string", "format": "uuid" },
+    "outcome": { "enum": ["Pass", "Fail", "Not Executed"] },
+    "environment": { "const": "demo-testnet" },
+    "browserTarget": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assetId", "code", "issuerAccount", "distributorAccount", "supply"],
+      "properties": {
+        "assetId": { "type": "string", "format": "uuid" },
+        "code": { "type": "string", "pattern": "^S5[A-F0-9]{10}$" },
+        "issuerAccount": { "$ref": "#/$defs/account" },
+        "distributorAccount": { "$ref": "#/$defs/account" },
+        "supply": { "$ref": "#/$defs/amount" }
+      }
+    },
+    "payment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hash", "ledger"],
+      "properties": {
+        "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "ledger": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshotId",
+        "runId",
+        "confirmedSupply",
+        "observedSupply",
+        "holderCount",
+        "holdersHash",
+        "synchronizedAt"
+      ],
+      "properties": {
+        "snapshotId": { "type": "string", "format": "uuid" },
+        "runId": { "type": "string", "format": "uuid" },
+        "confirmedSupply": { "$ref": "#/$defs/amount" },
+        "observedSupply": { "$ref": "#/$defs/amount" },
+        "holderCount": { "type": "integer", "minimum": 1, "maximum": 10000 },
+        "holdersHash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "firstLedger": { "type": "integer", "minimum": 0 },
+        "lastLedger": { "type": "integer", "minimum": 0 },
+        "synchronizedAt": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "recoveryScenario": {
+      "enum": ["none", "after-submit-before-result-persist"]
+    },
+    "activityEventCount": { "type": "integer", "minimum": 0 },
+    "finalizedAt": { "type": "string", "format": "date-time" },
+    "revision": { "type": "string", "pattern": "^[a-f0-9]{40}$" }
+  },
+  "$defs": {
+    "account": {
+      "type": "string",
+      "pattern": "^G[A-D2-7][A-Z2-7]{54}$"
+    },
+    "amount": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.[0-9]{7}$"
+    }
+  }
+}

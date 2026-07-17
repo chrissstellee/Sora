@@ -2,13 +2,50 @@
   "name": "@repo/backend",
   "version": "1.0.0",
   "license": "MIT",
-  "main": "index.js",
+  "type": "module",
+  "exports": {
+    "./domain/asset-record": "./src/domain/asset-record.ts",
+    "./domain/asset-lifecycle": "./src/domain/asset-lifecycle.ts",
+    "./domain/activity": "./src/domain/activity.ts",
+    "./domain/demo": "./src/domain/demo.ts",
+    "./domain/issuance": "./src/domain/issuance.ts",
+    "./domain/ownership": "./src/domain/ownership.ts",
+    "./domain/tokenization": "./src/domain/tokenization.ts",
+    "./stellar/config": "./src/stellar/config.ts",
+    "./stellar/auth": "./src/stellar/auth.ts",
+    "./stellar/explorer": "./src/stellar/explorer.ts",
+    "./stellar/ownership": "./src/stellar/ownership.ts",
+    "./api": "./convex/_generated/api.js"
+  },
   "scripts": {
     "dashboard": "convex dashboard",
     "dev": "convex dev",
-    "lint:fix": "oxlint --fix convex && oxfmt --write convex && cd convex && tsc --noEmit"
+    "lint": "oxlint convex src",
+    "lint:fix": "oxlint --fix convex src && oxfmt --write src convex/schema.ts convex/tasks.ts convex/README.md convex/tsconfig.json",
+    "phase2:backfill": "tsx --env-file=.env.local src/scripts/phase2-backfill.ts",
+    "phase5:evidence": "tsx --env-file=.env.local src/scripts/phase5.ts evidence",
+    "phase5:fault:arm": "tsx --env-file=.env.local src/scripts/phase5.ts fault-arm",
+    "phase5:preflight": "tsx --env-file=.env.local src/scripts/phase5.ts preflight",
+    "phase5:prepare": "tsx --env-file=.env.local src/scripts/phase5.ts prepare",
+    "phase5:reset": "tsx --env-file=.env.local src/scripts/phase5.ts reset",
+    "phase5:seed:ownership": "tsx --env-file=.env.local src/scripts/phase5.ts seed-ownership",
+    "spike:testnet": "tsx src/stellar/spike.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "convex": "^1.31.7"
+    "@convex-dev/aggregate": "^0.2.2",
+    "@stellar/stellar-sdk": "16.0.1",
+    "convex": "^1.31.7",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.15.3",
+    "convex-test": "^0.0.54",
+    "tsx": "^4.20.6",
+    "typescript": "5.9.2",
+    "vite": "^8.1.4",
+    "vitest": "4.1.10"
   }
 }

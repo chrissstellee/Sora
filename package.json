@@ -7,9 +7,39 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "check:phase2-bounds": "node scripts/check-phase2-bounds.mjs",
+    "check:phase2-mocks": "node scripts/check-phase2-mocks.mjs",
+    "check:phase3-mocks": "node scripts/check-phase3-mocks.mjs",
+    "check:phase4-safety": "node scripts/check-phase4-safety.mjs",
+    "check:phase5-manifests": "node scripts/verify-phase5-manifests.mjs",
+    "check:phase5-safety": "node scripts/check-phase5-safety.mjs",
     "dev": "turbo run dev",
+    "format:check": "oxfmt --check .",
+    "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
-    "prepare": "husky"
+    "phase2:backfill": "pnpm --filter @repo/backend phase2:backfill",
+    "phase2:browser:install": "pnpm --filter web phase2:browser:install",
+    "phase2:e2e": "pnpm --filter web phase2:e2e",
+    "phase2:perf": "pnpm --filter web phase2:perf",
+    "phase2:seed": "pnpm --filter web phase2:seed",
+    "phase5:browser:install": "pnpm --filter web phase5:browser:install",
+    "phase5:e2e": "pnpm --filter web phase5:e2e",
+    "phase5:evidence": "pnpm --filter @repo/backend phase5:evidence",
+    "phase5:fault:arm": "pnpm --filter @repo/backend phase5:fault:arm",
+    "phase5:perf": "pnpm --filter web phase5:perf",
+    "phase5:preflight": "pnpm --filter @repo/backend phase5:preflight",
+    "phase5:prepare": "pnpm --filter @repo/backend phase5:prepare",
+    "phase5:reset": "pnpm --filter @repo/backend phase5:reset",
+    "phase5:seed": "pnpm --filter web phase5:seed && pnpm --filter @repo/backend phase5:seed:ownership",
+    "prepare": "husky",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "verify": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm check:phase2-bounds && pnpm check:phase2-mocks && pnpm check:phase3-mocks && pnpm check:phase4-safety && pnpm build && pnpm scan:secrets",
+    "verify:phase2": "pnpm verify && pnpm phase2:backfill && pnpm phase2:seed && pnpm phase2:perf && pnpm phase2:e2e",
+    "verify:phase3": "pnpm verify && pnpm phase2:e2e",
+    "verify:phase4": "pnpm verify && pnpm phase2:e2e",
+    "verify:phase5": "pnpm verify && pnpm check:phase5-safety && pnpm phase5:seed && pnpm phase5:perf && pnpm phase5:e2e && pnpm check:phase5-manifests"
   },
   "devDependencies": {
     "husky": "^9.1.7",
@@ -19,7 +49,7 @@
     "typescript": "6.0.3"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22 <23"
   },
   "packageManager": "pnpm@10.25.0"
 }
