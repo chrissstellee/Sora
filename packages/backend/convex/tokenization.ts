@@ -57,6 +57,7 @@ function publicProfile(profile: NonNullable<Awaited<ReturnType<typeof findProfil
     _id,
     _creationTime,
     organizationId: _organizationId,
+    supplyUnits: _supplyUnits,
     updatedBy: _updatedBy,
     ...safe
   } = profile;

@@ -83,6 +83,14 @@ describe("Phase 3 review and Ready gate", () => {
       correlationId: "profile-1",
       profile: { assetCode: "sora1", proposedSupply: "25.5", internalReference: "Deal 1" },
     });
+    expect(() => JSON.stringify(profile)).not.toThrow();
+    expect(profile.profile).not.toHaveProperty("supplyUnits");
+    const snapshot = await t.query(api.tokenization.getReviewSnapshot, {
+      boundaryKey: BOUNDARY,
+      sessionTokenHash: identity.tokenHash,
+      assetId: created.asset.assetId as string,
+    });
+    expect(() => JSON.stringify(snapshot)).not.toThrow();
     await t.run(async (ctx) => {
       const storageId = await ctx.storage.store(new Blob(["%PDF-1.7\nfixture"]));
       await ctx.db.insert("supportingDocuments", {
