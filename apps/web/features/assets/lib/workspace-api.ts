@@ -11,8 +11,19 @@ export interface ActivityEvent {
   eventId: string;
   eventType: string;
   assetId?: string;
+  runId?: string;
+  actorKind?: "user" | "system";
+  subjectType?: string;
+  subjectId?: string;
+  outcome?: "success" | "failure" | "pending" | string;
+  correlationId?: string;
   timestamp: number;
-  metadata?: { status?: string; changedFields?: string[] };
+  metadata?: Record<string, unknown>;
+}
+
+export interface ActivityListResponse {
+  items: ActivityEvent[];
+  nextCursor: string | null;
 }
 
 export interface AssetListResponse {
@@ -64,8 +75,8 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   return body;
 }
 
-export function listAssets(signal: AbortSignal, query = "", cursor?: string) {
-  const params = new URLSearchParams({ limit: "25" });
+export function listAssets(signal: AbortSignal, query = "", cursor?: string, limit = 25) {
+  const params = new URLSearchParams({ limit: String(limit) });
   if (query.trim()) params.set("q", query.trim());
   if (cursor) params.set("cursor", cursor);
   return request<AssetListResponse>(`/api/assets?${params}`, { signal });
@@ -93,10 +104,36 @@ export function getWorkspaceSummary(signal: AbortSignal) {
   return request<WorkspaceSummary>("/api/workspace/summary", { signal });
 }
 
-export function getActivity(signal: AbortSignal, assetId?: string, limit = 25) {
-  const params = new URLSearchParams({ limit: String(limit) });
-  if (assetId) params.set("assetId", assetId);
-  return request<{ items: ActivityEvent[] }>(`/api/activity?${params}`, { signal });
+export function getActivity(
+  signal: AbortSignal,
+  options: { assetId?: string; runId?: string; cursor?: string; limit?: number } = {},
+) {
+  const params = new URLSearchParams({ limit: String(options.limit ?? 25) });
+  if (options.assetId) params.set("assetId", options.assetId);
+  if (options.runId) params.set("runId", options.runId);
+  if (options.cursor) params.set("cursor", options.cursor);
+  return request<ActivityListResponse>(`/api/activity?${params}`, { signal }).then((response) => ({
+    ...response,
+    items: response.items.map((event) => ({
+      ...event,
+      metadata: parseActivityMetadata(event.metadata),
+    })),
+  }));
+}
+
+function parseActivityMetadata(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  if (typeof value !== "string") return undefined;
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export function formatAssetValue(asset: AssetRecord) {

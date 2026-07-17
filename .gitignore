@@ -49,6 +49,8 @@ docs/*
 !docs/phase-3/**
 !docs/phase-4/
 !docs/phase-4/**
+!docs/phase-5/
+!docs/phase-5/**
 !docs/adr/
 !docs/adr/**
 !docs/prds/

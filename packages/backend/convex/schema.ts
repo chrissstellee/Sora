@@ -22,7 +22,9 @@ export default defineSchema({
     expiresAt: v.number(),
     revokedAt: v.optional(v.number()),
     createdAt: v.number(),
-  }).index("by_tokenHash", ["tokenHash"]),
+  })
+    .index("by_tokenHash", ["tokenHash"])
+    .index("by_organizationId_expiresAt", ["organizationId", "expiresAt"]),
   challenges: defineTable({
     walletAddress: v.string(),
     challengeXdr: v.string(),
@@ -37,7 +39,8 @@ export default defineSchema({
   }).index("by_tokenHash", ["tokenHash"]),
   activityEvents: defineTable({
     organizationId: v.id("organizations"),
-    userId: v.id("users"),
+    userId: v.optional(v.id("users")),
+    actorKind: v.optional(v.union(v.literal("user"), v.literal("system"))),
     eventType: v.string(),
     timestamp: v.number(),
     outcome: v.string(),
@@ -45,11 +48,24 @@ export default defineSchema({
     metadata: v.string(),
     assetId: v.optional(v.string()),
     eventId: v.optional(v.string()),
+    runId: v.optional(v.string()),
+    subjectType: v.optional(v.string()),
+    subjectId: v.optional(v.string()),
+    proofType: v.optional(v.string()),
+    proofId: v.optional(v.string()),
   })
     .index("by_organizationId", ["organizationId"])
     .index("by_organizationId_timestamp", ["organizationId", "timestamp", "eventId"])
     .index("by_organizationId_assetId_timestamp", [
       "organizationId",
+      "assetId",
+      "timestamp",
+      "eventId",
+    ])
+    .index("by_organizationId_runId_timestamp", ["organizationId", "runId", "timestamp", "eventId"])
+    .index("by_organizationId_runId_assetId_timestamp", [
+      "organizationId",
+      "runId",
       "assetId",
       "timestamp",
       "eventId",
@@ -82,9 +98,11 @@ export default defineSchema({
     readyAt: v.optional(v.number()),
     reviewManifestId: v.optional(v.id("reviewManifests")),
     approvedManifestFingerprint: v.optional(v.string()),
+    runId: v.optional(v.string()),
   })
     .index("by_organizationId_assetId", ["organizationId", "assetId"])
     .index("by_organizationId_requestId", ["organizationId", "createRequestId"])
+    .index("by_organizationId_runId", ["organizationId", "runId"])
     .index("by_organizationId_registration", ["organizationId", "normalizedRegistrationNumber"])
     .index("by_organizationId_name", ["organizationId", "normalizedName", "assetId"])
     .index("by_organizationId_lifecycle", ["organizationId", "lifecycle"])
@@ -218,11 +236,13 @@ export default defineSchema({
     paymentHash: v.optional(v.string()),
     paymentLedger: v.optional(v.number()),
     paymentLedgerCloseTime: v.optional(v.number()),
+    currentOwnershipSnapshotId: v.optional(v.id("ownershipSnapshots")),
     safeErrorCode: v.optional(v.string()),
     createdBy: v.id("users"),
     createdAt: v.number(),
     updatedAt: v.number(),
     confirmedAt: v.optional(v.number()),
+    runId: v.optional(v.string()),
   })
     .index("by_issuanceId", ["issuanceId"])
     .index("by_organizationId_issuanceId", ["organizationId", "issuanceId"])
@@ -301,6 +321,131 @@ export default defineSchema({
     leaseExpiresAt: v.number(),
     updatedAt: v.number(),
   }).index("by_network_sourceAccount", ["network", "sourceAccount"]),
+  ownershipSnapshots: defineTable({
+    snapshotId: v.string(),
+    attemptId: v.string(),
+    organizationId: v.id("organizations"),
+    assetId: v.string(),
+    issuanceId: v.string(),
+    network: v.literal("Testnet"),
+    assetCode: v.string(),
+    issuerAccount: v.string(),
+    confirmedSupply: v.string(),
+    observedSupply: v.string(),
+    holderCount: v.number(),
+    holdersHash: v.string(),
+    firstLedger: v.optional(v.number()),
+    lastLedger: v.optional(v.number()),
+    synchronizedAt: v.number(),
+    pinned: v.optional(v.boolean()),
+    runId: v.optional(v.string()),
+  })
+    .index("by_snapshotId", ["snapshotId"])
+    .index("by_organizationId_assetId_synchronizedAt", [
+      "organizationId",
+      "assetId",
+      "synchronizedAt",
+    ]),
+  ownershipSyncAttempts: defineTable({
+    attemptId: v.string(),
+    requestId: v.string(),
+    organizationId: v.id("organizations"),
+    assetId: v.string(),
+    issuanceId: v.string(),
+    reason: v.union(
+      v.literal("issuance-confirmed"),
+      v.literal("manual"),
+      v.literal("visible-stale"),
+      v.literal("focus-stale"),
+    ),
+    state: v.union(
+      v.literal("Queued"),
+      v.literal("Staging"),
+      v.literal("Complete"),
+      v.literal("Failed"),
+    ),
+    fencingToken: v.optional(v.int64()),
+    pageCount: v.number(),
+    holderCount: v.number(),
+    observedUnits: v.int64(),
+    firstLedger: v.optional(v.number()),
+    lastLedger: v.optional(v.number()),
+    holdersHash: v.optional(v.string()),
+    lastAccount: v.optional(v.string()),
+    safeErrorCode: v.optional(v.string()),
+    startedAt: v.number(),
+    updatedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_attemptId", ["attemptId"])
+    .index("by_organizationId_assetId_startedAt", ["organizationId", "assetId", "startedAt"])
+    .index("by_organizationId_assetId_requestId", ["organizationId", "assetId", "requestId"])
+    .index("by_state_updatedAt", ["state", "updatedAt"]),
+  ownershipStagedHolders: defineTable({
+    attemptId: v.string(),
+    organizationId: v.id("organizations"),
+    account: v.string(),
+    normalizedAccount: v.string(),
+    balance: v.string(),
+    balanceUnits: v.int64(),
+    share: v.string(),
+    ledger: v.number(),
+  })
+    .index("by_attemptId_account", ["attemptId", "account"])
+    .index("by_attemptId_normalizedAccount", ["attemptId", "normalizedAccount"]),
+  ownershipSyncLeases: defineTable({
+    organizationId: v.id("organizations"),
+    assetId: v.string(),
+    holderId: v.string(),
+    fencingToken: v.int64(),
+    leaseExpiresAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_organizationId_assetId", ["organizationId", "assetId"]),
+  demoRuns: defineTable({
+    runId: v.string(),
+    requestId: v.string(),
+    organizationId: v.id("organizations"),
+    assetCode: v.string(),
+    assetCodeNonce: v.number(),
+    status: v.union(
+      v.literal("Prepared"),
+      v.literal("Active"),
+      v.literal("Completed"),
+      v.literal("Failed"),
+    ),
+    environment: v.literal("demo-testnet"),
+    browserTarget: v.string(),
+    recoveryScenario: v.optional(v.string()),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+    durationMs: v.optional(v.number()),
+    evidenceManifest: v.optional(v.string()),
+    outcome: v.optional(v.union(v.literal("Pass"), v.literal("Fail"), v.literal("Not Executed"))),
+  })
+    .index("by_runId", ["runId"])
+    .index("by_organizationId_requestId", ["organizationId", "requestId"])
+    .index("by_organizationId_status", ["organizationId", "status"])
+    .index("by_organizationId_assetCode", ["organizationId", "assetCode"]),
+  demoPreflightChecks: defineTable({
+    runId: v.string(),
+    organizationId: v.id("organizations"),
+    check: v.string(),
+    status: v.union(v.literal("Pass"), v.literal("Fail"), v.literal("Not Executed")),
+    safeAction: v.optional(v.string()),
+    correlationId: v.string(),
+    checkedAt: v.number(),
+  }).index("by_runId_check", ["runId", "check"]),
+  demoFaults: defineTable({
+    runId: v.string(),
+    organizationId: v.id("organizations"),
+    boundary: v.literal("after-submit-before-result-persist"),
+    status: v.union(v.literal("Armed"), v.literal("Consumed"), v.literal("Cleared")),
+    armedBy: v.id("users"),
+    armedAt: v.number(),
+    consumedAt: v.optional(v.number()),
+  })
+    .index("by_runId_boundary", ["runId", "boundary"])
+    .index("by_status", ["status"]),
   tasks: defineTable({
     organizationId: v.id("organizations"),
     todo: v.string(),

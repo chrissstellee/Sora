@@ -1,7 +1,9 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 
+import { stellarExpertUrl } from "@repo/backend/stellar/explorer";
 import { Button } from "@repo/ui/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/ui/card";
 
@@ -12,7 +14,10 @@ import { Phase3Preparation } from "./phase3-preparation";
 
 export function AssetDetailsPage({ assetId }: { assetId: string }) {
   const assetRequest = useRequest((signal) => getAsset(assetId, signal), [assetId]);
-  const activityRequest = useRequest((signal) => getActivity(signal, assetId, 25), [assetId]);
+  const activityRequest = useRequest(
+    (signal) => getActivity(signal, { assetId, limit: 25 }),
+    [assetId],
+  );
 
   if (assetRequest.isLoading) return <LoadingState label="Loading asset…" />;
   if (assetRequest.error) {
@@ -116,24 +121,101 @@ function Detail({ label, value, wide }: { label: string; value: string; wide?: b
 export function ActivityList({ items }: { items: import("../lib/workspace-api").ActivityEvent[] }) {
   return (
     <ol className="divide-y">
-      {items.map((event) => (
-        <li key={event.id} className="flex items-start justify-between gap-4 py-4">
-          <div>
-            <p className="font-medium">{event.eventType.replaceAll(".", " ")}</p>
-            {event.metadata?.changedFields?.length ? (
-              <p className="mt-1 text-sm text-muted-foreground">
-                Changed: {event.metadata.changedFields.join(", ")}
+      {items.map((event) => {
+        const proofLinks = activityProofLinks(event.metadata);
+        const changedFields = Array.isArray(event.metadata?.changedFields)
+          ? event.metadata.changedFields.filter(
+              (value): value is string => typeof value === "string",
+            )
+          : [];
+        return (
+          <li key={event.id} className="flex flex-col justify-between gap-3 py-4 sm:flex-row">
+            <div className="min-w-0">
+              <p className="font-medium capitalize">{event.eventType.replaceAll(".", " ")}</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {event.actorKind ? `${event.actorKind} · ` : "Legacy event · "}
+                {event.outcome ?? "recorded"}
+                {event.runId ? ` · Run ${event.runId}` : ""}
               </p>
-            ) : null}
-          </div>
-          <time
-            className="shrink-0 text-xs text-muted-foreground"
-            dateTime={new Date(event.timestamp).toISOString()}
-          >
-            {new Date(event.timestamp).toLocaleString()}
-          </time>
-        </li>
-      ))}
+              {changedFields.length > 0 && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Changed: {changedFields.join(", ")}
+                </p>
+              )}
+              <div className="mt-2 flex flex-wrap gap-3">
+                {event.assetId && (
+                  <Link
+                    href={`/assets/${encodeURIComponent(event.assetId)}`}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Open authorized asset
+                  </Link>
+                )}
+                {proofLinks.map((proof) => (
+                  <a
+                    key={`${proof.label}-${proof.href}`}
+                    href={proof.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    {proof.label} <ExternalLink className="size-3" aria-hidden="true" />
+                  </a>
+                ))}
+                {hasPublicProofMetadata(event.metadata) && proofLinks.length === 0 && (
+                  <span className="text-xs text-muted-foreground">Public proof unavailable</span>
+                )}
+              </div>
+            </div>
+            <time
+              className="shrink-0 text-xs text-muted-foreground"
+              dateTime={new Date(event.timestamp).toISOString()}
+            >
+              {new Date(event.timestamp).toLocaleString()}
+            </time>
+          </li>
+        );
+      })}
     </ol>
   );
+}
+
+function hasPublicProofMetadata(metadata: Record<string, unknown> | undefined) {
+  return Boolean(
+    metadata &&
+    ["transactionHash", "ledger", "account", "issuerAccount", "assetCode"].some(
+      (key) => key in metadata,
+    ),
+  );
+}
+
+function activityProofLinks(metadata: Record<string, unknown> | undefined) {
+  if (!metadata) return [];
+  const links: Array<{ label: string; href: string }> = [];
+  const add = (label: string, href: string | null) => {
+    if (href) links.push({ label, href });
+  };
+  if (typeof metadata.transactionHash === "string") {
+    add("Transaction proof", stellarExpertUrl({ resource: "tx", id: metadata.transactionHash }));
+  }
+  if (typeof metadata.ledger === "string" || typeof metadata.ledger === "number") {
+    add("Ledger proof", stellarExpertUrl({ resource: "ledger", id: metadata.ledger }));
+  }
+  if (typeof metadata.account === "string") {
+    add("Account proof", stellarExpertUrl({ resource: "account", id: metadata.account }));
+  }
+  if (typeof metadata.issuerAccount === "string") {
+    add("Issuer proof", stellarExpertUrl({ resource: "account", id: metadata.issuerAccount }));
+  }
+  if (typeof metadata.assetCode === "string" && typeof metadata.issuerAccount === "string") {
+    add(
+      "Asset proof",
+      stellarExpertUrl({
+        resource: "asset",
+        code: metadata.assetCode,
+        issuer: metadata.issuerAccount,
+      }),
+    );
+  }
+  return links;
 }

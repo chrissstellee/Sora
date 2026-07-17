@@ -33,6 +33,10 @@ const STATUS_BY_CODE: Record<string, number> = {
   INVALID_CREATE_REQUEST_ID: 422,
   INVALID_CURSOR: 422,
   INVALID_LIMIT: 422,
+  INVALID_PAGE_LIMIT: 422,
+  INVALID_ACCOUNT_SEARCH: 422,
+  INVALID_OWNERSHIP_CURSOR: 422,
+  HORIZON_RATE_LIMITED: 429,
 };
 
 export function apiError(error: unknown, correlationId: string) {
@@ -108,5 +112,11 @@ function errorMessage(code: string): string {
   if (code === "INVALID_CREATE_REQUEST_ID") return "Create request ID must be a UUID.";
   if (code === "INVALID_CURSOR") return "Pagination cursor is invalid or expired.";
   if (code === "INVALID_LIMIT") return "Limit must be an integer between 1 and 100.";
+  if (code === "INVALID_PAGE_LIMIT") return "Limit must be an integer between 1 and 100.";
+  if (code === "INVALID_ACCOUNT_SEARCH") return "Enter a valid Stellar account prefix.";
+  if (code === "INVALID_OWNERSHIP_CURSOR")
+    return "Ownership pagination cursor is invalid or expired.";
+  if (code === "HORIZON_RATE_LIMITED")
+    return "Ownership synchronization is rate limited. Wait briefly, then retry.";
   return "The service is temporarily unavailable.";
 }

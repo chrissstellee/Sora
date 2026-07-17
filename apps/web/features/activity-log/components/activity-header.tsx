@@ -7,7 +7,7 @@ export function ActivityLogHeader() {
     <PageHeader
       breadcrumbs={[{ label: <Link href="/assets">Assets</Link> }, { label: "Activity Log" }]}
       title="Activity Log"
-      description="View all activities and events within the system."
+      description="Review the Organization's canonical, newest-first event timeline and public Testnet proof."
     />
   );
 }

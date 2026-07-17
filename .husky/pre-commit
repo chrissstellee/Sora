@@ -1,1 +1,17 @@
+#!/usr/bin/env sh
+set -eu
+
+lock_dir="$(git rev-parse --git-path pre-commit.lock)"
+
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  echo "Another commit preflight is already running. Wait for it to finish before committing again." >&2
+  exit 1
+fi
+
+cleanup() {
+  rmdir "$lock_dir" 2>/dev/null || true
+}
+
+trap cleanup EXIT HUP INT TERM
+
 pnpm lint:fix

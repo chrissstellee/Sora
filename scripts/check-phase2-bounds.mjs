@@ -19,7 +19,7 @@ if (!/assetLifecycleCounts\.count\(/.test(assets)) {
     "packages/backend/convex/assets.ts: lifecycle counts do not use the aggregate index",
   );
 }
-if (!/\.take\(/.test(activity)) {
+if (!/\.take\(/.test(activity) && !/\.paginate\(paginationOpts\)/.test(activity)) {
   findings.push("packages/backend/convex/activity.ts: activity reads are not bounded");
 }
 

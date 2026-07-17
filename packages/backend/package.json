@@ -6,10 +6,15 @@
   "exports": {
     "./domain/asset-record": "./src/domain/asset-record.ts",
     "./domain/asset-lifecycle": "./src/domain/asset-lifecycle.ts",
+    "./domain/activity": "./src/domain/activity.ts",
+    "./domain/demo": "./src/domain/demo.ts",
     "./domain/issuance": "./src/domain/issuance.ts",
+    "./domain/ownership": "./src/domain/ownership.ts",
     "./domain/tokenization": "./src/domain/tokenization.ts",
     "./stellar/config": "./src/stellar/config.ts",
     "./stellar/auth": "./src/stellar/auth.ts",
+    "./stellar/explorer": "./src/stellar/explorer.ts",
+    "./stellar/ownership": "./src/stellar/ownership.ts",
     "./api": "./convex/_generated/api.js"
   },
   "scripts": {
@@ -18,6 +23,12 @@
     "lint": "oxlint convex src",
     "lint:fix": "oxlint --fix convex src && oxfmt --write src convex/schema.ts convex/tasks.ts convex/README.md convex/tsconfig.json",
     "phase2:backfill": "tsx --env-file=.env.local src/scripts/phase2-backfill.ts",
+    "phase5:evidence": "tsx --env-file=.env.local src/scripts/phase5.ts evidence",
+    "phase5:fault:arm": "tsx --env-file=.env.local src/scripts/phase5.ts fault-arm",
+    "phase5:preflight": "tsx --env-file=.env.local src/scripts/phase5.ts preflight",
+    "phase5:prepare": "tsx --env-file=.env.local src/scripts/phase5.ts prepare",
+    "phase5:reset": "tsx --env-file=.env.local src/scripts/phase5.ts reset",
+    "phase5:seed:ownership": "tsx --env-file=.env.local src/scripts/phase5.ts seed-ownership",
     "spike:testnet": "tsx src/stellar/spike.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"

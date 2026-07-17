@@ -351,9 +351,9 @@ describe("persisted asset workspace", () => {
     expect(summaryB.counts).toMatchObject({ total: 1, Draft: 1 });
     expect(summaryA.recentAssets.map((asset) => asset.assetId)).toEqual([assetA.asset.assetId]);
     expect(summaryB.recentAssets.map((asset) => asset.assetId)).toEqual([assetB.asset.assetId]);
-    expect(activityA.map((event) => event.assetId)).toEqual([assetA.asset.assetId]);
-    expect(activityB.map((event) => event.assetId)).toEqual([assetB.asset.assetId]);
-    expect(foreignAssetActivity).toEqual([]);
+    expect(activityA.items.map((event) => event.assetId)).toEqual([assetA.asset.assetId]);
+    expect(activityB.items.map((event) => event.assetId)).toEqual([assetB.asset.assetId]);
+    expect(foreignAssetActivity.items).toEqual([]);
   });
 
   it("rejects revoked, deleted, disabled, and organization-inconsistent identities", async () => {
@@ -563,7 +563,7 @@ describe("persisted asset workspace", () => {
       limit: 3,
     });
 
-    expect(events.map((event) => event.eventId)).toEqual(["event-e", "event-d", "event-c"]);
+    expect(events.items.map((event) => event.eventId)).toEqual(["event-e", "event-d", "event-c"]);
   });
 
   it("backfills pre-aggregate assets across pages and remains idempotent", async () => {

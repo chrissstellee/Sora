@@ -10,21 +10,14 @@ import {
   sha256Hex,
 } from "../src/domain/tokenization.js";
 import { mutation, query } from "./_generated/server.js";
+import { recordActivity } from "./activityWriter.js";
 import { assetLifecycleCounts } from "./assetAggregates.js";
+import { activeRunForOrganization } from "./demo.js";
 import { enforceAuth } from "./helpers.js";
 
+import type { ActivityEventType } from "../src/domain/activity.js";
 import type { DataModel, Id } from "./_generated/dataModel.js";
 import type { GenericMutationCtx, GenericQueryCtx } from "convex/server";
-
-const MAX_ACTIVITY_METADATA_BYTES = 2_048;
-
-function safeMetadata(value: Record<string, string | number | boolean>): string {
-  const encoded = JSON.stringify(value);
-  if (new TextEncoder().encode(encoded).byteLength > MAX_ACTIVITY_METADATA_BYTES) {
-    throw new Error("ACTIVITY_METADATA_TOO_LARGE");
-  }
-  return encoded;
-}
 
 async function findAsset(
   ctx: GenericQueryCtx<DataModel> | GenericMutationCtx<DataModel>,
@@ -97,21 +90,24 @@ async function addEvent(
     organizationId: Id<"organizations">;
     userId: Id<"users">;
     assetId: string;
-    eventType: string;
+    eventType: ActivityEventType;
     correlationId: string;
-    metadata: Record<string, string | number | boolean>;
+    runId?: string;
+    metadata: Record<string, unknown>;
   },
 ) {
-  await ctx.db.insert("activityEvents", {
+  await recordActivity(ctx, {
     organizationId: input.organizationId,
     userId: input.userId,
+    actorKind: "user",
     eventType: input.eventType,
-    timestamp: Date.now(),
+    subjectId: input.assetId,
     outcome: "success",
     correlationId: input.correlationId,
     eventId: input.correlationId,
     assetId: input.assetId,
-    metadata: safeMetadata(input.metadata),
+    runId: input.runId,
+    metadata: input.metadata,
   });
 }
 
@@ -136,6 +132,13 @@ export const updateProfile = mutation({
     if (asset.lifecycle !== "Draft") throw new Error("ASSET_NOT_EDITABLE");
     if (asset.version !== args.expectedAssetVersion) throw new Error("ASSET_VERSION_CONFLICT");
     const canonical = canonicalizeTokenizationProfile(args.profile);
+    const demoRun = await activeRunForOrganization(ctx, session.organizationId);
+    if (asset.runId !== undefined) {
+      if (!demoRun || demoRun.runId !== asset.runId) throw new Error("DEMO_RUN_NOT_ACTIVE");
+      if (canonical.assetCode !== demoRun.assetCode) throw new Error("DEMO_ASSET_CODE_MISMATCH");
+    } else if (demoRun) {
+      throw new Error("DEMO_RUN_ASSET_MISMATCH");
+    }
     const existing = await findProfile(ctx, session.organizationId, args.assetId);
     if (existing && existing.version !== args.expectedProfileVersion) {
       throw new Error("PROFILE_VERSION_CONFLICT");
@@ -180,7 +183,8 @@ export const updateProfile = mutation({
       assetId: asset.assetId,
       eventType: "asset.token_proposal_updated",
       correlationId: args.correlationId,
-      metadata: { profileId: profile.profileId, profileVersion: profile.version },
+      runId: asset.runId,
+      metadata: { assetCode: canonical.assetCode, network: "Testnet" },
     });
     return { profile: publicProfile(profile), assetVersion: asset.version + 1 };
   },
@@ -301,7 +305,8 @@ export const submitReview = mutation({
       assetId: asset.assetId,
       eventType: "asset.review_submitted",
       correlationId: args.correlationId,
-      metadata: { manifestId, fingerprint, documentCount: documents.length },
+      runId: asset.runId,
+      metadata: { manifestId },
     });
     return { manifestId, fingerprint, lifecycle: updated.lifecycle, assetVersion: updated.version };
   },
@@ -354,6 +359,7 @@ export const returnReview = mutation({
       assetId: asset.assetId,
       eventType: "asset.review_returned",
       correlationId: args.correlationId,
+      runId: asset.runId,
       metadata: { manifestId: manifest.manifestId, reason },
     });
     return { lifecycle: updated.lifecycle, assetVersion: updated.version, reason };
@@ -411,9 +417,10 @@ export const approve = mutation({
     await addEvent(ctx, {
       ...session,
       assetId: asset.assetId,
-      eventType: "asset.approved",
+      eventType: "asset.review_approved",
       correlationId: args.correlationId,
-      metadata: { manifestId: manifest.manifestId, fingerprint: manifest.fingerprint },
+      runId: asset.runId,
+      metadata: { manifestId: manifest.manifestId, lifecycle: "Ready" },
     });
     return {
       decisionId,
@@ -446,7 +453,8 @@ export const archive = mutation({
       assetId: asset.assetId,
       eventType: "asset.archived",
       correlationId: args.correlationId,
-      metadata: { priorLifecycle: asset.lifecycle },
+      runId: asset.runId,
+      metadata: { lifecycle: "Archived" },
     });
     return { lifecycle: updated.lifecycle, assetVersion: updated.version };
   },

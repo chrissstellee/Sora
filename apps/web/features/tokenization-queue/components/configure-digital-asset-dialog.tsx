@@ -1,7 +1,9 @@
 "use client";
 
+import { ExternalLink } from "lucide-react";
 import * as React from "react";
 
+import { stellarExpertUrl } from "@repo/backend/stellar/explorer";
 import {
   Credenza,
   CredenzaBody,
@@ -31,6 +33,32 @@ function ReadOnlyField({ label, value }: { label: string; value: string }) {
         {value}
       </div>
     </div>
+  );
+}
+
+function ProofLink({ href, label, value }: { href: string | null; label: string; value: string }) {
+  if (!href) {
+    return (
+      <p>
+        {label}: <span className="font-mono break-all">{value}</span>{" "}
+        <span className="text-muted-foreground">(public proof unavailable)</span>
+      </p>
+    );
+  }
+  return (
+    <p>
+      {label}:{" "}
+      <a
+        className="inline-flex items-center gap-1 font-mono break-all underline underline-offset-4"
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {value}
+        <ExternalLink className="size-3 shrink-0" aria-hidden="true" />
+        <span className="sr-only"> (opens StellarExpert Testnet in a new tab)</span>
+      </a>
+    </p>
   );
 }
 
@@ -177,22 +205,74 @@ export function ConfigureDigitalAssetDialog({ open, onOpenChange, entry, onProgr
             </div>
             <ReadOnlyField label="Issuer account" value={effectiveIssuer} />
             <ReadOnlyField label="Distributor account" value={effectiveDistributor} />
+            {issuance && (
+              <div className="rounded-lg border border-border p-4 text-sm">
+                <p className="font-semibold">Public Testnet accounts</p>
+                <ProofLink
+                  label="Issuer"
+                  value={issuance.issuerAccount}
+                  href={stellarExpertUrl({ resource: "account", id: issuance.issuerAccount })}
+                />
+                <ProofLink
+                  label="Distributor"
+                  value={issuance.distributorAccount}
+                  href={stellarExpertUrl({ resource: "account", id: issuance.distributorAccount })}
+                />
+                <ProofLink
+                  label="Asset"
+                  value={`${issuance.assetCode}:${issuance.issuerAccount}`}
+                  href={stellarExpertUrl({
+                    resource: "asset",
+                    code: issuance.assetCode,
+                    issuer: issuance.issuerAccount,
+                  })}
+                />
+              </div>
+            )}
             {issuance?.trustlineProof && (
               <div className="rounded-lg border border-border p-4 text-sm">
                 <p className="font-semibold">Trustline proof</p>
                 <p>Type: {issuance.trustlineProof.type}</p>
                 <p>Limit: {issuance.trustlineProof.limit}</p>
                 {issuance.trustlineProof.hash && (
-                  <p className="font-mono break-all">Hash: {issuance.trustlineProof.hash}</p>
+                  <ProofLink
+                    label="Transaction"
+                    value={issuance.trustlineProof.hash}
+                    href={stellarExpertUrl({ resource: "tx", id: issuance.trustlineProof.hash })}
+                  />
                 )}
-                {issuance.trustlineProof.ledger && <p>Ledger: {issuance.trustlineProof.ledger}</p>}
+                {issuance.trustlineProof.ledger && (
+                  <ProofLink
+                    label="Ledger"
+                    value={String(issuance.trustlineProof.ledger)}
+                    href={stellarExpertUrl({
+                      resource: "ledger",
+                      id: issuance.trustlineProof.ledger!,
+                    })}
+                  />
+                )}
               </div>
             )}
             {issuance?.paymentProof && (
               <div className="rounded-lg border border-success/40 bg-success/10 p-4 text-sm">
                 <p className="font-semibold">Confirmed payment proof</p>
-                <p className="font-mono break-all">Hash: {issuance.paymentProof.hash}</p>
-                <p>Ledger: {issuance.paymentProof.ledger}</p>
+                <ProofLink
+                  label="Transaction"
+                  value={issuance.paymentProof.hash}
+                  href={stellarExpertUrl({ resource: "tx", id: issuance.paymentProof.hash })}
+                />
+                {issuance.paymentProof.ledger === undefined ? (
+                  <p>Ledger: Proof unavailable</p>
+                ) : (
+                  <ProofLink
+                    label="Ledger"
+                    value={String(issuance.paymentProof.ledger)}
+                    href={stellarExpertUrl({
+                      resource: "ledger",
+                      id: issuance.paymentProof.ledger,
+                    })}
+                  />
+                )}
                 <p>Delivered supply: {issuance.paymentProof.amount}</p>
               </div>
             )}

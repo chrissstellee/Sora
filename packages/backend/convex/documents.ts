@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import { MAX_ACTIVE_DOCUMENTS } from "../src/domain/tokenization.js";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server.js";
+import { recordActivity } from "./activityWriter.js";
 import { enforceAuth } from "./helpers.js";
 
 import type { DataModel, Id } from "./_generated/dataModel.js";
@@ -195,20 +196,18 @@ export const remove = mutation({
     await ctx.storage.delete(document.storageId);
     await ctx.db.patch(document._id, { state: "Retired", retiredAt: now });
     await ctx.db.patch(asset._id, { version: asset.version + 1, updatedAt: now });
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId: session.organizationId,
       userId: session.userId,
+      actorKind: "user",
       eventType: "document.deleted",
-      timestamp: now,
+      subjectId: document.documentId,
       outcome: "success",
       correlationId: args.correlationId,
       eventId: args.correlationId,
       assetId: asset.assetId,
-      metadata: JSON.stringify({
-        documentId: document.documentId,
-        filename: document.filename,
-        version: document.version,
-      }),
+      runId: asset.runId,
+      timestamp: now,
     });
     return { deleted: true, replayed: false, assetVersion: asset.version + 1 };
   },
@@ -334,22 +333,19 @@ export const commitFinalize = internalMutation({
       finalizedDocumentVersion: version,
     });
     await ctx.db.patch(asset._id, { version: asset.version + 1, updatedAt: now });
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId: session.organizationId,
       userId: session.userId,
+      actorKind: "user",
       eventType: replaced ? "document.replaced" : "document.uploaded",
-      timestamp: now,
+      subjectId: documentId,
       outcome: "success",
       correlationId: args.correlationId,
       eventId: args.correlationId,
       assetId: asset.assetId,
-      metadata: JSON.stringify({
-        documentId,
-        filename: args.filename,
-        mediaType: args.mediaType,
-        byteSize: args.byteSize,
-        version,
-      }),
+      runId: asset.runId,
+      metadata: { mediaType: args.mediaType, byteSize: args.byteSize },
+      timestamp: now,
     });
     const document = (await ctx.db.get(inserted))!;
     return {

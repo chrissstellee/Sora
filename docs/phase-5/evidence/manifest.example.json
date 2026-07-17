@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "runId": "00000000-0000-4000-8000-000000000000",
+  "outcome": "Not Executed",
+  "environment": "demo-testnet",
+  "browserTarget": "chromium-freighter",
+  "asset": {
+    "assetId": "00000000-0000-4000-8000-000000000000",
+    "code": "S50000000000",
+    "issuerAccount": "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "distributorAccount": "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "supply": "1.0000000"
+  },
+  "payment": {
+    "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "ledger": 1
+  },
+  "ownership": {
+    "snapshotId": "00000000-0000-4000-8000-000000000000",
+    "runId": "00000000-0000-4000-8000-000000000000",
+    "confirmedSupply": "1.0000000",
+    "observedSupply": "1.0000000",
+    "holderCount": 1,
+    "holdersHash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "firstLedger": 1,
+    "lastLedger": 1,
+    "synchronizedAt": 0
+  },
+  "recoveryScenario": "none",
+  "activityEventCount": 0,
+  "finalizedAt": "1970-01-01T00:00:00.000Z",
+  "revision": "0000000000000000000000000000000000000000"
+}

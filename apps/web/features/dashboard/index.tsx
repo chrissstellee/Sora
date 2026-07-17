@@ -14,7 +14,7 @@ import { useDashboard } from "./hooks/use-dashboard";
 
 export function DashboardPage() {
   const { data, error, isLoading, retry } = useDashboard();
-  const activity = useRequest((signal) => getActivity(signal, undefined, 10), []);
+  const activity = useRequest((signal) => getActivity(signal, { limit: 10 }), []);
   if (isLoading) return <LoadingState label="Loading workspace dashboard…" />;
   if (error) return <ErrorState error={error} onRetry={retry} />;
   if (!data) return null;

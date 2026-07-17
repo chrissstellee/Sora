@@ -29,6 +29,7 @@ interface WorkerIssuance {
   distributorAccount: string;
   trustlineState: string;
   paymentState: string;
+  runId?: string;
 }
 
 interface WorkerAttempt {
@@ -211,6 +212,32 @@ async function processPurpose(
       fencingToken: lock.fencingToken,
     });
     return;
+  }
+  if (
+    purpose === "issuance-payment" &&
+    snapshot.issuance.runId &&
+    globalThis.process.env.SORA_DEPLOYMENT_TIER === "demo-testnet" &&
+    globalThis.process.env.PHASE5_FAULTS_ENABLED === "true"
+  ) {
+    const consumed = await ctx.runMutation(internal.demo.consumePaymentFault, {
+      hash,
+      fencingToken: lock.fencingToken,
+    });
+    if (consumed) {
+      await ctx.runMutation(internal.issuances.recordReconciliation, {
+        hash,
+        fencingToken: lock.fencingToken,
+        checkedAt: Date.now(),
+        hashResult: "Unavailable",
+        outcome: "Unresolved",
+        correlationId: crypto.randomUUID(),
+      });
+      await ctx.runMutation(internal.issuances.scheduleRetry, {
+        hash,
+        fencingToken: lock.fencingToken,
+      });
+      return;
+    }
   }
   await ctx.runMutation(internal.issuances.markSubmitted, {
     hash,

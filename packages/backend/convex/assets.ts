@@ -10,25 +10,18 @@ import {
   type CanonicalAssetRecordInput,
 } from "../src/domain/asset-record.js";
 import { mutation, query } from "./_generated/server.js";
+import { recordActivity } from "./activityWriter.js";
 import { assetLifecycleCounts } from "./assetAggregates.js";
+import { activeRunForOrganization } from "./demo.js";
 import { enforceAuth, enforceBoundary } from "./helpers.js";
 
 import type { DataModel, Id } from "./_generated/dataModel.js";
 import type { GenericMutationCtx, GenericQueryCtx } from "convex/server";
 
-const MAX_ACTIVITY_METADATA_BYTES = 2_048;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function canonicalFingerprint(input: CanonicalAssetRecordInput): string {
   return JSON.stringify(input);
-}
-
-function activityMetadata(value: { status?: string; changedFields?: string[] }): string {
-  const metadata = JSON.stringify(value);
-  if (new TextEncoder().encode(metadata).byteLength > MAX_ACTIVITY_METADATA_BYTES) {
-    throw new Error("ACTIVITY_METADATA_TOO_LARGE");
-  }
-  return metadata;
 }
 
 function toPublicAsset(asset: Record<string, unknown>) {
@@ -94,6 +87,16 @@ export const create = mutation({
     if (registration) throw new Error("REGISTRATION_NUMBER_CONFLICT");
     const now = Date.now();
     const assetId = crypto.randomUUID();
+    const demoRun = await activeRunForOrganization(ctx, session.organizationId);
+    if (demoRun) {
+      const existingRunAsset = await ctx.db
+        .query("assets")
+        .withIndex("by_organizationId_runId", (q) =>
+          q.eq("organizationId", session.organizationId).eq("runId", demoRun.runId),
+        )
+        .first();
+      if (existingRunAsset) throw new Error("DEMO_RUN_ASSET_ALREADY_EXISTS");
+    }
     const id = await ctx.db.insert("assets", {
       ...input,
       assetId,
@@ -107,17 +110,21 @@ export const create = mutation({
       version: 1,
       createRequestId: args.createRequestId,
       createFingerprint: fingerprint,
+      runId: demoRun?.runId,
     });
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId: session.organizationId,
       userId: session.userId,
+      actorKind: "user",
       eventType: "asset.created",
-      timestamp: now,
+      subjectId: assetId,
       outcome: "success",
       correlationId: args.correlationId,
       eventId: args.correlationId,
       assetId,
-      metadata: activityMetadata({ status: "Draft" }),
+      runId: demoRun?.runId,
+      metadata: { lifecycle: "Draft" },
+      timestamp: now,
     });
     const asset = (await ctx.db.get(id))!;
     await assetLifecycleCounts.insertIfDoesNotExist(ctx, asset);
@@ -178,20 +185,21 @@ export const update = mutation({
       updatedAt: now,
       version: asset.version + 1,
     };
-    await Promise.all([
-      ctx.db.patch(asset._id, updateFields),
-      ctx.db.insert("activityEvents", {
-        organizationId: session.organizationId,
-        userId: session.userId,
-        eventType: "asset.updated",
-        timestamp: now,
-        outcome: "success",
-        correlationId: args.correlationId,
-        eventId: args.correlationId,
-        assetId: asset.assetId,
-        metadata: activityMetadata({ changedFields }),
-      }),
-    ]);
+    await ctx.db.patch(asset._id, updateFields);
+    await recordActivity(ctx, {
+      organizationId: session.organizationId,
+      userId: session.userId,
+      actorKind: "user",
+      eventType: "asset.updated",
+      subjectId: asset.assetId,
+      outcome: "success",
+      correlationId: args.correlationId,
+      eventId: args.correlationId,
+      assetId: asset.assetId,
+      runId: asset.runId,
+      metadata: { changedFields, lifecycle: asset.lifecycle },
+      timestamp: now,
+    });
     return {
       asset: toPublicAsset({ ...asset, ...updateFields }),
       outcome: "updated" as const,

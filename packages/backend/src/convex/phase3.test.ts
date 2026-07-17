@@ -141,7 +141,9 @@ describe("Phase 3 review and Ready gate", () => {
     expect(queue.items[0]).toMatchObject({ lifecycle: "Ready", profile: { supply: "25.5000000" } });
     expect(state.manifests).toHaveLength(1);
     expect(state.decisions.filter((decision) => decision.decision === "Approved")).toHaveLength(1);
-    expect(state.events.filter((event) => event.eventType === "asset.approved")).toHaveLength(1);
+    expect(
+      state.events.filter((event) => event.eventType === "asset.review_approved"),
+    ).toHaveLength(1);
   });
 
   it("keeps foreign assets and Ready rows nondisclosing and immutable", async () => {

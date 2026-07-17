@@ -3,7 +3,9 @@ import { v } from "convex/values";
 
 import { internal } from "./_generated/api.js";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server.js";
+import { recordActivity } from "./activityWriter.js";
 import { assetLifecycleCounts } from "./assetAggregates.js";
+import { activeRunForOrganization } from "./demo.js";
 import { enforceAuth } from "./helpers.js";
 
 import type { DataModel, Id } from "./_generated/dataModel.js";
@@ -152,6 +154,14 @@ export const request = mutation({
       )
       .unique();
     if (existing) return { issuanceId: existing.issuanceId, claimed: false };
+    const demoRun = await activeRunForOrganization(ctx, session.organizationId);
+    if (asset.runId !== undefined) {
+      if (!demoRun || demoRun.runId !== asset.runId || demoRun.status !== "Active") {
+        throw new Error("DEMO_RUN_NOT_ACTIVE");
+      }
+    } else if (demoRun) {
+      throw new Error("DEMO_RUN_ASSET_MISMATCH");
+    }
     if (asset.lifecycle !== "Ready") throw new Error("ASSET_NOT_READY_FOR_ISSUANCE");
     if (asset.version !== args.expectedAssetVersion) throw new Error("ASSET_VERSION_CONFLICT");
     if (!asset.reviewManifestId || !asset.approvedManifestFingerprint) {
@@ -168,6 +178,9 @@ export const request = mutation({
     ]);
     if (!manifest || !profile || manifest.fingerprint !== asset.approvedManifestFingerprint) {
       throw new Error("APPROVED_MANIFEST_MISSING");
+    }
+    if (demoRun && profile.assetCode !== demoRun.assetCode) {
+      throw new Error("DEMO_ASSET_CODE_MISMATCH");
     }
     const accounts = publicAccounts();
     const reserved = await ctx.db
@@ -203,6 +216,7 @@ export const request = mutation({
       createdBy: session.userId,
       createdAt: now,
       updatedAt: now,
+      runId: demoRun?.runId,
     });
     await ctx.db.insert("managedAssetIdentities", {
       network: "Testnet",
@@ -225,16 +239,19 @@ export const request = mutation({
       updatedAt: now,
     });
     await assetLifecycleCounts.replace(ctx, asset, updatedAsset);
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId: session.organizationId,
       userId: session.userId,
+      actorKind: "user",
       eventType: "issuance.requested",
-      timestamp: now,
       outcome: "success",
       correlationId: args.correlationId,
       eventId: `issuance.requested:${issuanceId}`,
       assetId: asset.assetId,
-      metadata: JSON.stringify({ issuanceId, network: "Testnet", assetCode: profile.assetCode }),
+      runId: demoRun?.runId,
+      subjectId: issuanceId,
+      metadata: { network: "Testnet", assetCode: profile.assetCode },
+      timestamp: now,
     });
     await ctx.scheduler.runAfter(0, internal.issuanceWorker.process, { issuanceId });
     return { issuanceId, claimed: true };
@@ -304,16 +321,17 @@ export const resume = mutation({
     if (!attempts.some((attempt) => attempt.state === "SafeToRetry")) {
       throw new Error("ISSUANCE_NOT_SAFE_TO_RESUME");
     }
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId: session.organizationId,
       userId: session.userId,
+      actorKind: "user",
       eventType: "issuance.resumed",
-      timestamp: Date.now(),
       outcome: "success",
       correlationId: args.correlationId,
       eventId: args.correlationId,
       assetId: issuance.assetId,
-      metadata: JSON.stringify({ issuanceId: issuance.issuanceId }),
+      subjectId: issuance.issuanceId,
+      metadata: { safeState: "SafeToRetry" },
     });
     await ctx.scheduler.runAfter(0, internal.issuanceWorker.process, {
       issuanceId: issuance.issuanceId,
@@ -496,6 +514,7 @@ export const markSubmitted = internalMutation({
     if (!attempt) throw new Error("ATTEMPT_NOT_FOUND");
     if (attempt.fencingToken !== args.fencingToken) throw new Error("STALE_FENCING_TOKEN");
     if (attempt.state === "Confirmed") return attempt;
+    const firstSubmission = attempt.state !== "Submitted";
     const issuance = await ctx.db
       .query("issuances")
       .withIndex("by_issuanceId", (q) => q.eq("issuanceId", attempt.issuanceId))
@@ -513,6 +532,26 @@ export const markSubmitted = internalMutation({
         : { paymentState: "Submitted" }),
       updatedAt: now,
     });
+    if (firstSubmission) {
+      await recordActivity(ctx, {
+        organizationId: issuance.organizationId,
+        actorKind: "system",
+        eventType: "issuance.submitted",
+        subjectId: issuance.issuanceId,
+        outcome: "pending",
+        correlationId: `submission:${attempt.hash}`,
+        eventId: `issuance.submitted:${attempt.hash}`,
+        assetId: issuance.assetId,
+        metadata: {
+          network: "Testnet",
+          transactionHash: attempt.hash,
+          assetCode: issuance.assetCode,
+          issuerAccount: issuance.issuerAccount,
+        },
+        proof: { type: "transaction", id: attempt.hash },
+        timestamp: now,
+      });
+    }
     return { ...attempt, state: "Submitted" as const, submittedAt: attempt.submittedAt ?? now };
   },
 });
@@ -621,10 +660,27 @@ export const recordReconciliation = internalMutation({
       .withIndex("by_issuanceId", (q) => q.eq("issuanceId", attempt.issuanceId))
       .unique();
     if (issuance) {
+      const now = Date.now();
       await ctx.db.patch(issuance._id, {
         ...(attempt.purpose === "trustline" ? { trustlineState: state } : { paymentState: state }),
-        updatedAt: Date.now(),
+        updatedAt: now,
       });
+      if (state === "Reconciling" && attempt.state !== "Reconciling") {
+        await recordActivity(ctx, {
+          organizationId: issuance.organizationId,
+          actorKind: "system",
+          eventType: "issuance.reconciling",
+          subjectId: issuance.issuanceId,
+          outcome: "pending",
+          correlationId: args.correlationId,
+          eventId: `issuance.reconciling:${attempt.hash}:${args.correlationId}`,
+          assetId: issuance.assetId,
+          runId: issuance.runId,
+          metadata: { safeState: state, transactionHash: attempt.hash },
+          proof: { type: "transaction", id: attempt.hash },
+          timestamp: now,
+        });
+      }
     }
     return { state };
   },
@@ -677,21 +733,24 @@ export const confirmTrustline = internalMutation({
       trustlineLimit: args.limit,
       updatedAt: args.checkedAt,
     });
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId: issuance.organizationId,
-      userId: issuance.createdBy,
+      actorKind: "system",
       eventType: "issuance.trustline_confirmed",
-      timestamp: args.checkedAt,
       outcome: "success",
       correlationId: `trustline:${issuance.issuanceId}`,
       eventId: `issuance.trustline_confirmed:${issuance.issuanceId}`,
       assetId: issuance.assetId,
-      metadata: JSON.stringify({
-        issuanceId: issuance.issuanceId,
-        proofType: args.proofType,
-        hash: args.hash,
-        ledger: args.ledger,
-      }),
+      subjectId: issuance.issuanceId,
+      metadata: {
+        network: "Testnet",
+        ...(args.hash ? { transactionHash: args.hash } : {}),
+        ...(args.ledger ? { ledger: args.ledger } : {}),
+        assetCode: issuance.assetCode,
+        issuerAccount: issuance.issuerAccount,
+      },
+      proof: args.hash ? { type: "transaction", id: args.hash } : undefined,
+      timestamp: args.checkedAt,
     });
     return { confirmed: true, replayed: false };
   },
@@ -748,21 +807,28 @@ export const confirmPayment = internalMutation({
       updatedAt: args.confirmedAt,
     });
     await assetLifecycleCounts.replace(ctx, asset, updatedAsset);
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId: issuance.organizationId,
-      userId: issuance.createdBy,
+      actorKind: "system",
       eventType: "issuance.confirmed",
-      timestamp: args.confirmedAt,
       outcome: "success",
       correlationId: `payment:${issuance.issuanceId}`,
       eventId: `issuance.confirmed:${issuance.issuanceId}`,
       assetId: issuance.assetId,
-      metadata: JSON.stringify({
-        issuanceId: issuance.issuanceId,
-        hash: args.hash,
+      subjectId: issuance.issuanceId,
+      metadata: {
+        transactionHash: args.hash,
         ledger: args.ledger,
         network: "Testnet",
-      }),
+        amount: issuance.supply,
+        assetCode: issuance.assetCode,
+        issuerAccount: issuance.issuerAccount,
+      },
+      proof: { type: "transaction", id: args.hash },
+      timestamp: args.confirmedAt,
+    });
+    await ctx.scheduler.runAfter(0, internal.ownership.enqueueConfirmed, {
+      issuanceId: issuance.issuanceId,
     });
     return { confirmed: true, replayed: false };
   },
@@ -792,6 +858,18 @@ export const failPreflight = internalMutation({
       });
       await assetLifecycleCounts.replace(ctx, asset, updated);
     }
+    await recordActivity(ctx, {
+      organizationId: issuance.organizationId,
+      actorKind: "system",
+      eventType: "issuance.preflight_failed",
+      subjectId: issuance.issuanceId,
+      outcome: "failure",
+      correlationId: `preflight:${issuance.issuanceId}`,
+      eventId: `issuance.preflight_failed:${issuance.issuanceId}`,
+      assetId: issuance.assetId,
+      metadata: { safeErrorCode: args.safeErrorCode },
+      timestamp: now,
+    });
     return null;
   },
 });

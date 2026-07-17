@@ -1,88 +1,75 @@
 "use client";
 
-import { Checkbox } from "@repo/ui/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/ui/components/ui/select";
-import { cn } from "@repo/ui/lib/utils";
+import { Search } from "lucide-react";
+import * as React from "react";
 
-import { ASSET_FILTER_OPTIONS } from "../constants/ownership";
+import { Button } from "@repo/ui/components/ui/button";
+import { Input } from "@repo/ui/components/ui/input";
 
-import type { HolderFiltersState } from "../hooks/use-holder-filters";
-import type { THolderType } from "../lib/types";
-
-const HOLDER_TYPES: THolderType[] = ["Institutional", "Retail"];
+import type { OwnershipAssetOption } from "../lib/types";
 
 interface OwnershipFiltersBarProps {
-  filters: HolderFiltersState;
-  onAssetChange: (value: string) => void;
-  onHolderTypeChange: (value: THolderType) => void;
-  onShowConcentratedOnlyChange: (value: boolean) => void;
+  assets: OwnershipAssetOption[];
+  selectedAssetId?: string;
+  query: string;
+  onAssetChange: (assetId: string) => void;
+  onSearch: (query: string) => void;
 }
 
 export function OwnershipFiltersBar({
-  filters,
+  assets,
+  selectedAssetId,
+  query,
   onAssetChange,
-  onHolderTypeChange,
-  onShowConcentratedOnlyChange,
+  onSearch,
 }: OwnershipFiltersBarProps) {
+  const [value, setValue] = React.useState(query);
+  React.useEffect(() => setValue(query), [query]);
+
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-1.5">
-        <span className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
-          Viewing Asset
-        </span>
-        <Select value={filters.assetCode} onValueChange={onAssetChange}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ASSET_FILTER_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <span className="font-mono text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
-          Holder Type
-        </span>
-        <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-0.5">
-          {HOLDER_TYPES.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => onHolderTypeChange(type)}
-              className={cn(
-                "rounded-sm px-3 py-1 text-xs font-medium tracking-wide uppercase transition-colors",
-                filters.holderType === type
-                  ? "bg-background text-foreground shadow-xs"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {type}
-            </button>
+    <div className="grid gap-4 rounded-xl border border-border bg-card px-5 py-4 md:grid-cols-2">
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
+        Confirmed asset
+        <select
+          className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+          value={selectedAssetId ?? ""}
+          onChange={(event) => onAssetChange(event.target.value)}
+          disabled={assets.length === 0}
+        >
+          {assets.length === 0 && <option value="">No confirmed assets available</option>}
+          {assets.map((asset) => (
+            <option key={asset.assetId} value={asset.assetId}>
+              {asset.label}
+            </option>
           ))}
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="show-concentrated-only"
-          checked={filters.showConcentratedOnly}
-          onCheckedChange={(checked) => onShowConcentratedOnlyChange(checked === true)}
-        />
-        <label htmlFor="show-concentrated-only" className="text-sm text-muted-foreground">
-          Show Holders &gt; 5% Supply
+        </select>
+      </label>
+      <form
+        className="flex items-end gap-2"
+        role="search"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSearch(value);
+        }}
+      >
+        <label
+          htmlFor="ownership-account-search"
+          className="flex min-w-0 flex-1 flex-col gap-1.5 text-sm font-medium"
+        >
+          Account search
+          <Input
+            id="ownership-account-search"
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            placeholder="G… public account or prefix"
+            autoComplete="off"
+            spellCheck={false}
+          />
         </label>
-      </div>
+        <Button type="submit" variant="outline">
+          <Search aria-hidden="true" /> Search
+        </Button>
+      </form>
     </div>
   );
 }

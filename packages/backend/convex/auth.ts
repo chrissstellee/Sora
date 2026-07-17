@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import { mutation, query } from "./_generated/server.js";
+import { recordActivity } from "./activityWriter.js";
 import { enforceAuth, enforceBoundary } from "./helpers.js";
 
 const CHALLENGE_TTL = 5 * 60 * 1000;
@@ -83,22 +84,24 @@ export const completeAuthentication = mutation({
     if (!organization) throw new Error("AUTH_IDENTITY_INVALID");
     if (organization.disabledAt) throw new Error("AUTH_ORGANIZATION_DISABLED");
     const now = Date.now();
-    await ctx.db.insert("sessions", {
+    const sessionId = await ctx.db.insert("sessions", {
       tokenHash: args.sessionTokenHash,
       userId: user._id,
       organizationId: user.organizationId,
       expiresAt: args.sessionExpiresAt,
       createdAt: now,
     });
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId: user.organizationId,
       userId: user._id,
-      eventType: "wallet_login",
-      timestamp: now,
+      actorKind: "user",
+      eventType: "auth.wallet_login",
+      subjectId: sessionId,
       outcome: "success",
       correlationId: args.correlationId,
       eventId: args.correlationId,
-      metadata: JSON.stringify({ type: "returning" }),
+      metadata: { walletAddress: user.walletAddress },
+      timestamp: now,
     });
     return {
       status: "authenticated" as const,
@@ -182,15 +185,16 @@ export const onboard = mutation({
       expiresAt: args.sessionExpiresAt,
       createdAt: now,
     });
-    await ctx.db.insert("activityEvents", {
+    await recordActivity(ctx, {
       organizationId,
       userId,
-      eventType: "wallet_onboard",
-      timestamp: now,
+      actorKind: "user",
+      eventType: "auth.wallet_onboarded",
+      subjectId: organizationId,
       outcome: "success",
       correlationId: args.correlationId,
       eventId: args.correlationId,
-      metadata: JSON.stringify({ organizationCreated: true }),
+      timestamp: now,
     });
     return { userId, organizationId, walletAddress: grant.walletAddress, orgName };
   },
